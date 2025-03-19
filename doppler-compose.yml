@@ -1,0 +1,36 @@
+---
+# pass env secrets - doppler
+x-doppler: &doppler-env
+  environment:{{range $key, $value := .}}
+    - {{$key}}{{end}}
+
+# Run app + dependent services
+services:
+  backend:
+    <<: *doppler-env            # injects doppler secrets
+    image: note-app:backend
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+
+  frontend:
+    <<: *doppler-env            # injects doppler secrets
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - 8181:8181
+    depends_on:
+      - backend
+
+  db:
+    <<: *doppler-env            # injects doppler secrets
+    image: postgres:alpine
+    ports:
+      - 5432:5432
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:

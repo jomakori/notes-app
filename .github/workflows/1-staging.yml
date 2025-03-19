@@ -1,0 +1,165 @@
+#  ┌────────────────────────────────────────────────────────────────────────────────────┐
+#  │ Purpose:                                                                           │
+#  │ - Triggers workflow for deployment to staging                                      │
+#  │ - Send a message on PR - to confirm deployment to user                             │
+#  └────────────────────────────────────────────────────────────────────────────────────┘
+name: 1 - Deploy to Staging
+
+# Enforces Staging branch = staging env
+on:
+  workflow_dispatch: # manual run fallback
+  push:
+    branches:
+      - staging
+
+# Permissions to write on PR
+permissions: write-all
+
+jobs:
+  build:
+    name: Build Staging
+    environment: staging
+    runs-on: ubuntu-latest
+    container: encoredotdev/encore:latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@main
+        with:
+          lfs: true
+
+      - name: Install CLI
+        uses: dopplerhq/cli-action@master
+
+      - name: Fetch Doppler Secrets
+        id: doppler
+        uses: dopplerhq/secrets-fetch-action@main
+        with:
+          doppler-token: ${{ secrets.STG_DOPPLER_TOKEN }}
+          inject-env-vars: true
+
+      - name: Set/Save Semantic Version
+        id: version
+        env:
+          DOPPLER_TOKEN: ${{ secrets.STG_DOPPLER_TOKEN }}
+        run: |
+          # Get the PR Number
+          PR_NUM=$(gh pr view --json number -q .number)
+
+          if [ -z "$PR_NUM" ]; then
+            echo "ERROR: PR number for this commit is null. See Logs."
+            exit 1
+          fi
+
+          # Set the version
+          export semantic_version=pr-$PR_NUM
+
+          # Update version on Doppler
+          doppler secrets set SEMANTIC_VERSION=$semantic_version
+
+          # pass var to other steps
+          echo "semantic_version=pr-$PR_NUM" >> $GITHUB_OUTPUT
+
+      - name: Confirm new release (fail-catch)
+        if: steps.version.outputs.semantic_version == '' # null
+        uses: actions/github-script@main
+        with:
+          script: |
+            core.setFailed("Semantic version is null. See logs.")
+
+      - name: Backend - Build & Push
+        env:
+          IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-backend
+          IMAGE_TAG: ${{ steps.version.outputs.semantic_version }} # Since it was changed post-fetch
+        run: |
+          encore build docker note-app:$IMAGE_TAG --config encore.prod.json
+          docker push $IMAGE_NAME:$IMAGE_TAG
+
+      - name: Frontend - Build & Push
+        env:
+          IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-frontend
+          IMAGE_TAG: ${{ steps.version.outputs.semantic_version }} # Since it was changed post-fetch
+        run: |
+          cd frontend
+          docker build -t $IMAGE_NAME:$IMAGE_TAG .
+          docker push $IMAGE_NAME:$IMAGE_TAG
+  deploy:
+    name: Deploy Staging
+    needs: build
+    environment: staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Doppler Secrets
+        id: doppler
+        uses: dopplerhq/secrets-fetch-action@main
+        with:
+          doppler-token: ${{ secrets.STG_DOPPLER_TOKEN }}
+          inject-env-vars: true
+
+      - uses: alexellis/arkade-get@master
+        with:
+          yq: latest
+
+      - name: Checkout Helm Chart
+        uses: actions/checkout@main
+        with:
+          repository: jomakori/gke_GitOps
+          token: ${{ steps.doppler.outputs.GITHUB_TOKEN }}
+
+      - name: Deploy Staging
+        env:
+          CONTAINER_TAG: ${{ steps.doppler.outputs.SEMANTIC_VERSION }} #retrieved from build step
+        run: |
+          # Login Git
+          git config --global user.email "joe3rdwash@gmail.com"
+          git config --global user.name "Joel Makori"
+
+          # Backend - Update image tag in Helm Chart
+          cd apps/helm/notes-app-backend
+          yq -i e '.environments[0].image.tag = env(CONTAINER_TAG)| (... | select(tag == "!!merge")) tag = ""' values.yaml
+
+          # Frontend - Update image tag in Helm Chart
+          cd ../notes-app-frontend
+          yq -i e '.environments[0].image.tag = env(CONTAINER_TAG)| (... | select(tag == "!!merge")) tag = ""' values.yaml
+
+          # Confirm changes
+          if [[ -z $(git status -s) ]]; then
+            echo "The container tags have already been updated to: $(IMAGE_TAG). Deployment skipped..."
+            exit 0
+          fi
+
+          # Push Changes - ArgoCD will auto-sync changes in cluster
+          git add .
+          git commit -m "chore(staging) notes-app-backend: Test changes in: ${CONTAINER_TAG}"
+          git push
+
+  comment-pr:
+    name: Comment on PR
+    environment: staging
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@main
+
+      - name: Comment on PR
+        run: |
+          PR_NUM=$(gh pr view --json number -q .number)
+          gh pr comment $PR_NUM --repo "jomakori/demoapp" --body "$msg"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          msg: |
+            ## ✅ The Staging Env has successfully spun up
+            - ### [Notes App API (backend)](https://staging-demoapp.intrc.net/)
+            - ### [Notes App UI (frontend)](https://staging-flower.intrc.net/)
+
+            ### Verify deployment by:
+            - #### Confirming the version in ArgoCD
+            - #### Confirming `rev` label in EKS pods/deployments = PR number
+
+            ## 📄 Checklist before merging to PROD
+            - [ ] Confirm Changes
+            - [ ] Merge PR - to release changes to production.
+
+            > [!IMPORTANT]
+            > If there are changes that need to be made or merge conflicts you need to resolve, make the changes in feature branch, then merge branch to staging
+              - Reason: The `staging` branch only allows changes that go thru the Merge Queue - hence need for new merge from feature branch
