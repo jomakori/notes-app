@@ -27,6 +27,10 @@ on:
   merge_group:
     types: [checks_requested]
 
+  ## Run on "test" comment to PR
+  issue_comment:
+    types: [created]
+
 # Jobs to Run:
 jobs:
   ## Ran only on PR - for initial labeling
@@ -60,7 +64,7 @@ jobs:
       - name: Precommit - Lint Testing
         uses: pre-commit/action@release
         env:
-          SKIP: golangci-lint
+          SKIP: golangci-lint # using gh action instead
         with:
           extra_args: --files ${{ steps.changed-files.outputs.all_changed_files }}
 
@@ -74,7 +78,7 @@ jobs:
   ## Run only when PR joins merge queue to staging
   check_existing_pr:
     name: Check for existing Release PR
-    if: github.event_name != 'pull_request' || github.event.action == 'enqueued'
+    if: github.event_name != 'pull_request' && github.event.action == 'enqueued' || github.event_name == 'issue_comment' && contains(github.event.comment.body, 'test')
     runs-on: ubuntu-latest
     steps:
       - name: Check for Open Release PRs
@@ -97,7 +101,7 @@ jobs:
 
   test:
     name: Test Changes
-    if: github.event_name != 'pull_request' || github.event.action == 'enqueued' # https://github.com/orgs/community/discussions/51120
+    if: github.event_name != 'pull_request' && github.event.action == 'enqueued' || github.event_name == 'issue_comment' && contains(github.event.comment.body, 'test')
     needs: check_existing_pr
     runs-on: ubuntu-latest-large # Use custom gh runner - GH hosted
     services:
@@ -129,10 +133,9 @@ jobs:
         uses: actions/checkout@main
         with:
           lfs: true
-
-      #----------------------------------------------
-      #-----------  Install Dependencies  -----------
-      #----------------------------------------------
+  # ┌───────────────────────────────────────────────────────────────────────┐
+  # │ Install Dependencies                                                  │
+  # └───────────────────────────────────────────────────────────────────────┘
       - name: Backend - Install Go deps
         run: go mod download
 
@@ -143,6 +146,9 @@ jobs:
       - name: Install go-junit-report
         run: go install github.com/jstemmer/go-junit-report@latest
 
+  # ┌──────────────────────────────────────────────────────────────────────────┐
+  # │ Perform testing                                                          │
+  # └──────────────────────────────────────────────────────────────────────────┘
       - name: Test Backend - Go/Encore
         run: go test ./... | go-junit-report > test-results/backend-results.xml
 
@@ -150,6 +156,9 @@ jobs:
         run: npm test
         working-directory: ./frontend
 
+  # ┌───────────────────────────────────────────────────────────────────────┐
+  # │ Post Results                                                          │
+  # └───────────────────────────────────────────────────────────────────────┘
       - name: Publish Test Results
         id: test-report
         uses: dorny/test-reporter@main

@@ -18,7 +18,7 @@ permissions: write-all
 jobs:
   build:
     name: Build Release
-    environment: release
+    environment: production
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
