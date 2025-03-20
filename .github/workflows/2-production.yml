@@ -64,8 +64,8 @@ jobs:
         run: |
           encore build -t $IMAGE_NAME:$IMAGE_TAG --config encore.prod.json
           docker push $IMAGE_NAME:$IMAGE_TAG
-      
-      - name: Frontend - Build & Push image 
+
+      - name: Frontend - Build & Push image
         env:
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-frontend
           IMAGE_TAG: ${{ steps.semantic.outputs.new_release_version }}
