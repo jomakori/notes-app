@@ -50,6 +50,11 @@ jobs:
         with:
           lfs: true
 
+      - name: Prereq - Install golangci-lint
+        run: |
+          wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s
+          golangci-lint --version
+
       - id: changed-files
         uses: tj-actions/changed-files@main # @v36
 
