@@ -57,6 +57,8 @@ jobs:
         uses: tj-actions/changed-files@main # @v36
 
       - uses: pre-commit/action@release # @v3.0.1
+        env:
+          SKIP: golangci-lint
         with:
           extra_args: --files ${{ steps.changed-files.outputs.all_changed_files }} --skip=golangci-lint
 
