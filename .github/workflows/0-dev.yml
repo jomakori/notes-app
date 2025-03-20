@@ -53,6 +53,7 @@ jobs:
       - name: Prereq - Install golangci-lint
         run: |
           wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s
+          export PATH=$PATH:$(pwd)/bin
           golangci-lint --version
 
       - id: changed-files
