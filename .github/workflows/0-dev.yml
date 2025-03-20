@@ -1,13 +1,13 @@
-#  ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-#  │ Purpose:                                                                                                         │
-#  │ - Runs checks on commits from feature branches, including:                                                       │
-#  │    - Placing a label on PR                                                                                       │
-#  │    - Running lint checks on each commit                                                                          │
-#  │    - Check for existing Release PR that are open on staging                                                      │
-#  │ - When changes are good, merge to staging queue to run testing:                                                  │
-#  │    - If testing is good -> Merge to staging branch                                                               │
-#  │    - Else               -> reject PR - user will correct errors and resubmit PR to the staging merge queue       │
-#  └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+#  ┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+#  │ Purpose:                                                                                               │
+#  │ - Runs checks on commits from feature branches, including:                                             │
+#  │    - Placing a label on PR                                                                             │
+#  │    - Running lint checks on each commit                                                                │
+#  │    - Check for existing Release PR that are open on staging                                            │
+#  │ - When changes are good, merge to staging queue to run testing:                                        │
+#  │    - If testing is good -> Merge to staging branch                                                     │
+#  │    - Else               -> reject PR - user will correct errors and resubmit PR to the staging queue   │
+#  └────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 name: 0 - Run Checks & Test Changes
 
@@ -43,7 +43,6 @@ jobs:
   ## Ran on commits to feature branch & merge queue
   lint:
     name: Lint Code
-    environment: dev
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -69,7 +68,6 @@ jobs:
   check_existing_pr:
     name: Check for existing Release PR
     if: github.event_name != 'pull_request' || github.event.action == 'enqueued'
-    environment: dev
     runs-on: ubuntu-latest
     steps:
       - name: Check for Open Release PRs
@@ -93,7 +91,6 @@ jobs:
   test:
     name: Test Changes
     if: github.event_name != 'pull_request' || github.event.action == 'enqueued' # https://github.com/orgs/community/discussions/51120
-    environment: testing
     needs: check_existing_pr
     runs-on: ubuntu-latest-large # Use custom gh runner - GH hosted
     services:
@@ -129,66 +126,29 @@ jobs:
       #----------------------------------------------
       #-----------  Install Dependencies  -----------
       #----------------------------------------------
-      - name: Setup Python
-        id: setup-python
-        uses: actions/setup-python@main
+      - name: Backend - Install Go deps
+        run: go mod download
+
+      - name: Frontend - Install Node.js deps
+        run: npm ci
+        working-directory: ./frontend
+
+      - name: Install go-junit-report
+        run: go install github.com/jstemmer/go-junit-report@latest
+
+      - name: Test Backend - Go/Encore
+        run: go test ./... | go-junit-report > test-results/backend-results.xml
+
+      - name: Test Frontend - Node/Jest
+        run: npm test
+        working-directory: ./frontend
+
+      - name: Publish Test Results
+        id: test-report
+        uses: dorny/test-reporter@main
+        if: success() || failure()  # Produce test report, pass or fail
         with:
-          python-version: 3.10.13
-
-      - name: Install Poetry
-        uses: snok/install-poetry@main
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Install gdal dependencies
-        run: |
-          sudo apt-get update && sudo apt-get install -y \
-          gdal-bin \
-          python3-gdal
-      #----------------------------------------------
-      #       load cached venv if cache exists
-      #----------------------------------------------
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@main
-        with:
-          path: .venv
-          key: venv-${{ hashFiles('poetry.lock') }}
-      #----------------------------------------------
-      # install dependencies if cache does not exist
-      #----------------------------------------------
-      - name: Setup Poetry Dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: |
-          poetry install --no-interaction --no-root
-
-      #----------------------------------------------
-      #----------------- Run Tests ------------------
-      #----------------------------------------------
-      - name: Run Tests - MyPy w/ ReviewDog
-        run: |
-          echo "Setup ReviewDog"
-          curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s
-
-          echo "GitHub Comment Bot reporting..."
-          make mypy_no_fail | ./bin/reviewdog -reporter=github-pr-review -efm="%f:%l:%c: %m"
-
-          echo "GitHub Checks reporting..."
-          make mypy_no_fail | ./bin/reviewdog -reporter=github-check -efm="%f:%l:%c: %m" -fail-on-error
-
-      # - name: Run Tests - PyTest Coverage
-      #   timeout-minutes: 10 # To avoid stuck test jobs - see logs for diagnosis
-      # Any issues will be reported on reporter below
-      #   run: |
-      #     make test_with_coverage || true
-
-      # - name: Publish Test Results
-      #   id: pytest
-      #   uses: dorny/test-reporter@main
-      #   if: success() || failure()  # Produce test report, pass or fail
-      #   with:
-      #     name: PyTest Code Coverage # Name of the check run which will be created
-      #     path: "./reports/pytest/test-report.xml" # Path to test results
-      #     reporter: java-junit # works w/ python too
-      #     fail-on-error: "false"
+          name: Test Results # Name of the check run which will be created
+          path: "**/test-results/*.xml" # Path to test results
+          reporter: jest-junit # Use jest-junit for frontend tests
+          fail-on-error: "false"
