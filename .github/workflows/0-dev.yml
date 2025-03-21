@@ -29,9 +29,13 @@ on:
       - edited
   ## Trigger Jobs on Merge Queue
   merge_group:
-    types: [checks_requested]
+    types:
+      - checks_requested
   ## Trigger Jobs on PR Comment
   issue_comment:
+    types:
+      - created
+      - edited
 
 # Jobs to Run:
 jobs:
@@ -79,7 +83,7 @@ jobs:
   # └─────────────────────────────────────────────────────────────────────────────┘
   check_existing_pr:
     name: Check for existing Release PR
-    if: contains(github.event.comment.body, 'test') || github.event_name == 'merge_group'
+    if: (github.event.issue.pull_request && contains(github.event.comment.body, '/test')) || (github.event_name == 'merge_group' && github.event.action == 'enqueued')
     runs-on: ubuntu-latest
     steps:
       - name: Check for Open Release PRs
@@ -114,6 +118,11 @@ jobs:
         uses: actions/checkout@main
         with:
           lfs: true
+
+      - name: Confirm branch name
+        run: |
+          echo "Running tests on branch: ${GITHUB_REF}"
+
   # ┌───────────────────────────────────────────────────────────────────────┐
   # │ Install Dependencies                                                  │
   # └───────────────────────────────────────────────────────────────────────┘
