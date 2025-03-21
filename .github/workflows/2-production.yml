@@ -105,12 +105,8 @@ jobs:
           git config --global user.email "joe3rdwash@gmail.com"
           git config --global user.name "Joel Makori"
 
-          # Backend - Update image tag in Helm Chart
-          cd apps/helm/notes-app-backend
-          yq -i e '.environments[1].image.tag = env(CONTAINER_TAG)| (... | select(tag == "!!merge")) tag = ""' values.yaml
-
-          # Frontend - Update image tag in Helm Chart
-          cd ../notes-app-frontend
+          # Frontend/Backend - Update image tag in Helm Chart
+          cd apps/helm/notes-app
           yq -i e '.environments[1].image.tag = env(CONTAINER_TAG)| (... | select(tag == "!!merge")) tag = ""' values.yaml
 
           # Confirm changes

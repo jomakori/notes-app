@@ -22,14 +22,16 @@ on:
       - opened
       - synchronize
       - edited
-
   ## Run on PR Merge to staging
   merge_group:
     types: [checks_requested]
-
   ## Run on "test" comment to PR
   issue_comment:
-    types: [created]
+
+# Pipeline permissions
+permissions:
+  contents: read
+  pull-requests: write
 
 # Jobs to Run:
 jobs:
@@ -37,9 +39,6 @@ jobs:
   label-pr:
     name: Label PR
     if: github.event_name == 'pull_request'
-    permissions:
-      contents: read
-      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/labeler@v5
