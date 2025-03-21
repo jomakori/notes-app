@@ -35,15 +35,15 @@ on:
 
 # Jobs to Run:
 jobs:
-  ## Ran only on PR - for initial labeling
+  # ┌─────────────────────────────────────────────────────────────────────────────┐
+  # │   Run jobs for commits to WIP PR                                            │
+  # └─────────────────────────────────────────────────────────────────────────────┘
   label-pr:
     name: Label PR
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/labeler@v5
-
-  ## Ran on commits to feature branch & merge queue
   lint:
     name: Lint Code
     runs-on: ubuntu-latest
@@ -74,10 +74,12 @@ jobs:
           script: |
             core.setFailed("Run `pre-commit run -a` to fix errors locally before re-committing")
 
-  ## Run only when PR joins merge queue to staging
+  # ┌─────────────────────────────────────────────────────────────────────────────┐
+  # │   Run jobs on Merge Queue or PR Comment 'test'                              │
+  # └─────────────────────────────────────────────────────────────────────────────┘
   check_existing_pr:
     name: Check for existing Release PR
-    if: github.event_name == 'merge_group' || contains(github.event.comment.body, 'test')
+    if: contains(github.event.comment.body, 'test') || github.event_name == 'merge_group'
     runs-on: ubuntu-latest
     steps:
       - name: Check for Open Release PRs
@@ -86,7 +88,6 @@ jobs:
         with:
           branch: staging
           state: open
-
       - name: Confirm/Deny Merge
         run: |
           if [ -n "${{ steps.find-prs.outputs.number }}" ]; then
@@ -97,34 +98,16 @@ jobs:
           else
             echo "Changes are ready for merge..."
           fi
-
   test:
     name: Test Changes
     needs: check_existing_pr
-    runs-on: ubuntu-latest-large # Use custom gh runner - GH hosted
-    services:
-      postgres:
-        image: corpusops/postgis:10
-        env:
-          DATABASE_URL: postgis://postgres@localhost:5432
-          POSTGRES_DB: demoapp
-          POSTGRES_PASSWORD: ""
-          POSTGRES_USER: postgres
-          POSTGRES_HOST_AUTH_METHOD: trust
-        ports:
-          - 5432:5432
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    runs-on: ubuntu-latest
     steps:
       - name: Fetch Doppler Secrets
         id: doppler
         uses: dopplerhq/secrets-fetch-action@main
         with:
-          doppler-token: ${{ secrets.CI_DOPPLER_TOKEN }}
+          doppler-token: ${{ secrets.DEV_DOPPLER_TOKEN }}
           inject-env-vars: true
 
       - name: Checkout Code
