@@ -1,14 +1,31 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import MarkdownEditor from './MarkdownEditor';
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import MarkdownEditor from "./MarkdownEditor";
 
-test('renders MarkdownEditor component', () => {
-    const mockProps = {
-        content: 'Sample content',
-        setContent: jest.fn(),
-    };
+// Mock @milkdown modules
+jest.mock('@milkdown/react', () => ({
+  Milkdown: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  useEditor: () => ({ get: () => ({ state: {} }) }),
+}));
 
-    render(<MarkdownEditor {...mockProps} />);
-    const element = screen.getByText(/Sample content/i);
-    expect(element).toBeInTheDocument();
-});
+jest.mock('@milkdown/core', () => ({
+  defaultValueCtx: jest.fn(),
+  rootCtx: jest.fn(),
+}));
+
+jest.mock('@milkdown/preset-commonmark', () => ({
+  commonmark: jest.fn(),
+}));
+
+test("renders MarkdownEditor component", () => {
+
+
+
+
+
+
+
+
+
+
+});  expect(editor).toBeInTheDocument();  const editor = screen.getByRole("textbox");  render(<MarkdownEditor {...mockProps} />);  };    setContent: jest.fn(),    content: "Sample content",  const mockProps = {

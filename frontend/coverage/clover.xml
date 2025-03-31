@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1743456186067" clover="3.2.0">
+  <project timestamp="1743456186068" name="All files">
+    <metrics statements="33" coveredstatements="21" conditionals="10" coveredconditionals="5" methods="9" coveredmethods="4" elements="52" coveredelements="30" complexity="0" loc="33" ncloc="33" packages="1" files="1" classes="1"/>
+    <file name="CoverSelector.tsx" path="/home/joel/notes-app/frontend/src/components/CoverSelector.tsx">
+      <metrics statements="33" coveredstatements="21" conditionals="10" coveredconditionals="5" methods="9" coveredmethods="4"/>
+      <line num="1" count="1" type="stmt"/>
+      <line num="2" count="1" type="stmt"/>
+      <line num="3" count="1" type="stmt"/>
+      <line num="4" count="1" type="stmt"/>
+      <line num="15" count="1" type="stmt"/>
+      <line num="16" count="1" type="stmt"/>
+      <line num="17" count="1" type="stmt"/>
+      <line num="20" count="1" type="stmt"/>
+      <line num="23" count="1" type="stmt"/>
+      <line num="26" count="1" type="stmt"/>
+      <line num="29" count="1" type="stmt"/>
+      <line num="30" count="0" type="stmt"/>
+      <line num="34" count="1" type="stmt"/>
+      <line num="35" count="1" type="stmt"/>
+      <line num="36" count="0" type="stmt"/>
+      <line num="37" count="0" type="stmt"/>
+      <line num="38" count="0" type="stmt"/>
+      <line num="40" count="0" type="stmt"/>
+      <line num="41" count="0" type="stmt"/>
+      <line num="43" count="0" type="stmt"/>
+      <line num="45" count="0" type="stmt"/>
+      <line num="48" count="1" type="cond" truecount="1" falsecount="1"/>
+      <line num="49" count="1" type="stmt"/>
+      <line num="52" count="1" type="stmt"/>
+      <line num="53" count="1" type="cond" truecount="1" falsecount="0"/>
+      <line num="54" count="1" type="stmt"/>
+      <line num="55" count="1" type="stmt"/>
+      <line num="59" count="1" type="stmt"/>
+      <line num="97" count="0" type="stmt"/>
+      <line num="136" count="0" type="stmt"/>
+      <line num="140" count="0" type="stmt"/>
+      <line num="141" count="0" type="stmt"/>
+      <line num="166" count="1" type="stmt"/>
+    </file>
+  </project>
+</coverage>

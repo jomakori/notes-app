@@ -1,9 +1,17 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import App from "./App";
 
-test('renders App component', () => {
-    render(<App />);
-    const linkElement = screen.getByText(/some text in App/i);
-    expect(linkElement).toBeInTheDocument();
+// Mock import.meta
+jest.mock("import.meta", () => ({
+  env: {
+    DEV: true,
+    PROD: false,
+  },
+}));
+
+test("renders App component", () => {
+  render(<App />);
+  const element = screen.getByRole("main");
+  expect(element).toBeInTheDocument();
 });

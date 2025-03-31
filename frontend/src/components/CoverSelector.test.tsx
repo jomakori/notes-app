@@ -1,16 +1,24 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import CoverSelector from './CoverSelector';
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import CoverSelector from "./CoverSelector";
+import debounce from "lodash.debounce";
 
-test('renders CoverSelector component', () => {
-    const mockProps = {
-        open: true,
-        setOpen: jest.fn(),
-        setCoverImage: jest.fn(),
-        client: {} as any, // Mock client object
-    };
+// Mock lodash.debounce
+jest.mock("lodash.debounce", () => jest.fn((fn) => fn));
 
-    render(<CoverSelector {...mockProps} />);
-    const element = screen.getByText(/some text in CoverSelector/i);
-    expect(element).toBeInTheDocument();
+test("renders CoverSelector component", () => {
+  const mockProps = {
+    open: true,
+    setOpen: jest.fn(),
+    setCoverImage: jest.fn(),
+    client: {
+      images: {
+        search: jest.fn().mockResolvedValue({ images: [] }),
+      },
+    },
+  };
+
+  render(<CoverSelector {...mockProps} />);
+  const element = screen.getByRole("button", { name: /select cover/i });
+  expect(element).toBeInTheDocument();
 });
