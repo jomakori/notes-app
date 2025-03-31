@@ -4,18 +4,29 @@ export default {
   testEnvironment: "jsdom",
   moduleNameMapper: {
     "\\.(css|less|scss|sass)$": "<rootDir>/src/__mocks__/styleMock.js",
+    "^@milkdown/(.*)$": "<rootDir>/src/__mocks__/milkdownMock.tsx",
+    "^./App$": "<rootDir>/src/__mocks__/AppMock.tsx",
   },
-  setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
   transform: {
     "^.+\\.(ts|tsx)$": [
       "ts-jest",
       {
-        tsconfig: "tsconfig.json",
         useESM: true,
+        tsconfig: "tsconfig.json",
       },
     ],
   },
-  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-  testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
+  transformIgnorePatterns: ["/node_modules/(?!(@milkdown|lodash-es)/)"],
+  setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
+  testEnvironmentOptions: {
+    customExportConditions: ["node", "node-addons"],
+  },
   extensionsToTreatAsEsm: [".ts", ".tsx"],
+  reporters: [
+    "default",
+    [
+      "jest-junit",
+      { outputDirectory: "test-results", outputName: "frontend-results.xml" },
+    ],
+  ],
 };

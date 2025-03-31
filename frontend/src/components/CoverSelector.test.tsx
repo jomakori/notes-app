@@ -19,6 +19,8 @@ test("renders CoverSelector component", () => {
   };
 
   render(<CoverSelector {...mockProps} />);
-  const element = screen.getByRole("button", { name: /select cover/i });
-  expect(element).toBeInTheDocument();
+  const dialog = screen.getByRole("dialog");
+  const heading = screen.getByText("Select cover photo");
+  expect(dialog).toBeInTheDocument();
+  expect(heading).toBeInTheDocument();
 });

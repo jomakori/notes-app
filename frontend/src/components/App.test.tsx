@@ -2,16 +2,10 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import App from "./App";
 
-// Mock import.meta
-jest.mock("import.meta", () => ({
-  env: {
-    DEV: true,
-    PROD: false,
-  },
-}));
-
 test("renders App component", () => {
   render(<App />);
-  const element = screen.getByRole("main");
-  expect(element).toBeInTheDocument();
+  const mainElement = screen.getByRole("main");
+  const textElement = screen.getByText(/Mock App Component/i);
+  expect(mainElement).toBeInTheDocument();
+  expect(textElement).toBeInTheDocument();
 });
