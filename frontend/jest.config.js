@@ -6,6 +6,7 @@ export default {
     "\\.(css|less|scss|sass)$": "<rootDir>/src/__mocks__/styleMock.js",
     "^@milkdown/(.*)$": "<rootDir>/src/__mocks__/milkdownMock.tsx",
     "^./App$": "<rootDir>/src/__mocks__/AppMock.tsx",
+    "^./MarkdownEditor$": "<rootDir>/src/__mocks__/MarkdownEditor.tsx",
   },
   transform: {
     "^.+\\.(ts|tsx)$": [
