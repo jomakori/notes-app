@@ -27,7 +27,7 @@ export default {
     "default",
     [
       "jest-junit",
-      { outputDirectory: "test-results", outputName: "frontend-results.xml" },
+      { outputDirectory: "../test-results", outputName: "frontend-results.xml" },
     ],
   ],
 };
