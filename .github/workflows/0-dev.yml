@@ -4,7 +4,7 @@
 #  │    - Placing a label on PR                                                                             │
 #  │    - Running lint checks on each commit                                                                │
 #  │    - Check for existing Release PR that are open on staging                                            │
-#  │ - When changes are good, merge to staging queue to run testing:                                        │
+#  │ - When changes are good, merge to staging queue to run testing (or trigger testing manually):                                        │
 #  │    - If testing is good -> Merge to staging branch                                                     │
 #  │    - Else               -> reject PR - user will correct errors and resubmit PR to the staging queue   │
 #  └────────────────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -32,11 +32,8 @@ on:
   merge_group:
     types:
       - checks_requested
-  ## Trigger Jobs on PR Comment
-  issue_comment:
-    types:
-      - created
-      - edited
+  ## Trigger Jobs manually
+  workflow_dispatch:
 
 # Jobs to Run:
 jobs:
@@ -84,7 +81,7 @@ jobs:
   # └─────────────────────────────────────────────────────────────────────────────┘
   check_existing_pr:
     name: Check for existing Release PR
-    if: (github.event.issue.pull_request != null && contains(github.event.comment.body, 'test')) || (github.event_name == 'merge_group' && github.event.action == 'enqueued')
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'merge_group' && github.event.action == 'enqueued')
     runs-on: ubuntu-latest
     steps:
       - name: Check for Open Release PRs
