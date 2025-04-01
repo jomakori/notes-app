@@ -110,9 +110,6 @@ jobs:
         with:
           lfs: true
 
-      - name: Install Doppler CLI
-        uses: dopplerhq/cli-action@master
-
       - name: Fetch Doppler Secrets
         id: doppler
         uses: dopplerhq/secrets-fetch-action@main
@@ -142,7 +139,7 @@ jobs:
   # │ Perform testing                                                          │
   # └──────────────────────────────────────────────────────────────────────────┘
       - name: Test Backend - Encore.Go
-        run: doppler run --command='encore test ./note ./pexels -cover | go-junit-report -set-exit-code > test-results/backend-report.xml'
+        run: encore test ./note ./pexels -cover | go-junit-report -set-exit-code > test-results/backend-report.xml
 
       - name: Test Frontend - Node/Jest
         run: npm test
