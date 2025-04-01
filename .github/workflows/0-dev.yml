@@ -105,7 +105,12 @@ jobs:
     needs: check_existing_pr
     runs-on: ubuntu-latest
     steps:
-      - name: Install Doppler cli
+      - name: Checkout Code
+        uses: actions/checkout@main
+        with:
+          lfs: true
+
+      - name: Install Doppler CLI
         uses: dopplerhq/cli-action@master
 
       - name: Fetch Doppler Secrets
@@ -114,11 +119,6 @@ jobs:
         with:
           doppler-token: ${{ secrets.DEV_DOPPLER_TOKEN }}
           inject-env-vars: true
-
-      - name: Checkout Code
-        uses: actions/checkout@main
-        with:
-          lfs: true
 
   # ┌───────────────────────────────────────────────────────────────────────┐
   # │ Install Dependencies                                                  │
