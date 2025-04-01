@@ -1,8 +1,8 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 
-// Use jest.mock with path relative to the test file
-jest.mock("../components/MarkdownEditor");
+// Mock the MarkdownEditor component
+jest.mock("./MarkdownEditor");
 
 import MarkdownEditor from "./MarkdownEditor";
 

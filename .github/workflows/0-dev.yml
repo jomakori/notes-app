@@ -127,21 +127,26 @@ jobs:
   # ┌───────────────────────────────────────────────────────────────────────┐
   # │ Install Dependencies                                                  │
   # └───────────────────────────────────────────────────────────────────────┘
-      - name: Backend - Install Go deps
-        run: go mod download
+      - name: Backend - Install Encore
+        run: curl -L https://encore.dev/install.sh | bash
 
       - name: Frontend - Install Node.js deps
-        run: npm ci
+        run: npm build
         working-directory: ./frontend
 
-      - name: Install go-junit-report
-        run: go install github.com/jstemmer/go-junit-report@latest
+      - name: Setup other deps
+        run: |
+          echo "Installing go-junit-report creator"
+          go install github.com/jstemmer/go-junit-report@latest
+
+          echo "Creating test-results directory"
+          mkdir -p test-results
 
   # ┌──────────────────────────────────────────────────────────────────────────┐
   # │ Perform testing                                                          │
   # └──────────────────────────────────────────────────────────────────────────┘
-      - name: Test Backend - Go/Encore
-        run: go test ./... | go-junit-report > test-results/backend-results.xml
+      - name: Test Backend - Encore.Go
+        run: doppler run --command='encore test ./note ./pexels -cover | go-junit-report -set-exit-code > test-results/backend-report.xml'
 
       - name: Test Frontend - Node/Jest
         run: npm test
