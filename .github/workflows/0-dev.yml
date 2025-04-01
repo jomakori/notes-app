@@ -105,6 +105,9 @@ jobs:
     needs: check_existing_pr
     runs-on: ubuntu-latest
     steps:
+      - name: Install Doppler cli
+        uses: dopplerhq/cli-action@master
+
       - name: Fetch Doppler Secrets
         id: doppler
         uses: dopplerhq/secrets-fetch-action@main
@@ -116,10 +119,6 @@ jobs:
         uses: actions/checkout@main
         with:
           lfs: true
-
-      - name: Confirm branch name
-        run: |
-          echo "Running tests on branch: ${GITHUB_REF}"
 
   # ┌───────────────────────────────────────────────────────────────────────┐
   # │ Install Dependencies                                                  │
