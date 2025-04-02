@@ -143,9 +143,9 @@ jobs:
           echo "$HOME/.go/bin" >> $GITHUB_PATH
 
           # verify installations
-          go -v
-          encore -v
-          go-junit-report -v
+          go version
+          encore version
+          go-junit-report --version
 
       - name: Setup npm + reports directory
         working-directory: ./frontend
