@@ -73,15 +73,15 @@ jobs:
         run: |
           # Define PR number and comments
           PR_NUM=$(gh pr view --json number -q .number)
-          comments=$(gh pr view $PR_NUM --json comments --jq '.comments[] | select(.body | startswith("## ✅ The Staging Env has successfully spun up")) | .id')
+          comments=$(gh pr view $PR_NUM --repo ${{ github.repository }} --json comments --jq '.comments[] | select(.body | startswith("> Note: If this is a `WIP` PR")) | .id')
 
           # Remove old comments
           for comment_id in $comments; do
-            gh pr comment delete $comment_id --repo "jomakori/notes-app"
+            gh api -X DELETE repos/${{ github.repository }}/issues/comments/$comment_id
           done
 
           # Post the new comment
-          gh pr comment $PR_NUM --repo "jomakori/notes-app" --body "$msg"
+          gh pr comment $PR_NUM --repo ${{ github.repository }} --body "$msg"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           msg: |
@@ -129,7 +129,6 @@ jobs:
         uses: actions/checkout@main
         with:
           lfs: true
-          fetch-depth: 0
 
       - name: Fetch Doppler Secrets
         id: doppler
