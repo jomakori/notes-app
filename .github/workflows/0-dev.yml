@@ -70,21 +70,10 @@ jobs:
           extra_args: --files ${{ steps.changed-files.outputs.all_changed_files }}
 
       - name: Comment on PR
-        run: |
-          # Define PR number and comments
-          PR_NUM=$(gh pr view --json number -q .number)
-          comments=$(gh pr view $PR_NUM --repo ${{ github.repository }} --json comments --jq '.comments[] | select(.body | startswith("> Note: If this is a `WIP` PR")) | .id')
-
-          # Remove old comments
-          for comment_id in $comments; do
-            gh api -X DELETE repos/${{ github.repository }}/issues/comments/$comment_id
-          done
-
-          # Post the new comment
-          gh pr comment $PR_NUM --repo ${{ github.repository }} --body "$msg"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          msg: |
+        uses: mshick/add-pr-comment@main
+        with:
+          message: |
+            ## Lint Checks passed ✅
             > Note: If this is a `WIP` PR - make sure this PR is pointed to the `staging` branch.
             When you merge the PR, `testing` will trigger - otherwise it can be manually triggered via the UI
 
