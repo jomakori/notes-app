@@ -132,7 +132,7 @@ jobs:
       - name: Backend - Install Encore
         run: |
           curl -L https://encore.dev/install.sh | bash
-          echo 'export PATH=$PATH:$HOME/.encore/bin' >> $GITHUB_ENV
+          '$HOME/.encore/bin' >> $GITHUB_PATH
 
       - name: Frontend - Install npm deps
         run: npm install
@@ -142,7 +142,7 @@ jobs:
         run: |
           echo "Installing go-junit-report"
           go install github.com/jstemmer/go-junit-report@latest
-          echo 'export PATH=$PATH:$HOME/.go/bin' >> $GITHUB_ENV
+          '$HOME/.go/bin' >> $GITHUB_PATH
 
           echo "Creating test-results directory"
           mkdir -p test-results
