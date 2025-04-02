@@ -3,7 +3,9 @@
         "go@latest",
         "nodejs@latest",
         "go-junit-report@latest",
-        "pre-commit@latest"
+        "pre-commit@latest",
+        "golangci-lint@latest",
+        "github:encoredev/encore-flake"
     ],
     "shell": {
         "scripts": {
@@ -14,9 +16,8 @@
             ],
             "test_be": [
                 "echo 'Performing tests on the Backend'",
-                "curl -L https://encore.dev/install.sh | bash",
                 "echo 'Creating test-results dir' && mkdir -p test-results",
-                "encore test ./note ./pexels -cover | go-junit-report -set-exit-code > test-results/backend-report.xml"
+                "encore test ./note ./pexels -cover && encore test ./note ./pexels -cover -v 2>&1 | go-junit-report -set-exit-code > test-results/backend-report.xml"
             ],
             "pre-commit": [
                 "pre-commit run --all-files"
