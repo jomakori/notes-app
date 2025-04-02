@@ -1,0 +1,26 @@
+{
+    "packages": [
+        "go@latest",
+        "nodejs@latest",
+        "go-junit-report@latest",
+        "pre-commit@latest"
+    ],
+    "shell": {
+        "scripts": {
+            "test_fe": [
+                "echo 'Performing tests on the Frontend'",
+                "echo 'Creating test-results dir' && mkdir -p test-results",
+                "cd frontend && npm install && npm test"
+            ],
+            "test_be": [
+                "echo 'Performing tests on the Backend'",
+                "curl -L https://encore.dev/install.sh | bash",
+                "echo 'Creating test-results dir' && mkdir -p test-results",
+                "encore test ./note ./pexels -cover | go-junit-report -set-exit-code > test-results/backend-report.xml"
+            ],
+            "pre-commit": [
+                "pre-commit run --all-files"
+            ]
+        }
+    }
+}

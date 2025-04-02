@@ -49,25 +49,21 @@ jobs:
   lint:
     name: Lint Code
     runs-on: ubuntu-latest
+    container: nixos/nix    # pre-req for devbox
     steps:
       - name: Checkout Code
         uses: actions/checkout@main
         with:
           lfs: true
 
-      - name: Prereq - Grab changed files
-        id: changed-files
-        uses: tj-actions/changed-files@main
-
-      - name: Backend - Lint Testing
-        uses: golangci/golangci-lint-action@v6.5.1
-
-      - name: Precommit - Lint Testing
-        uses: pre-commit/action@release
-        env:
-          SKIP: golangci-lint # using gh action instead
+      - name: DevBox - Install
+        uses: jetify-com/devbox-install-action@main
         with:
-          extra_args: --files ${{ steps.changed-files.outputs.all_changed_files }}
+          enable-cache: 'true'
+
+      - name: Pre-commit - Lint Testing
+        run:
+          devbox run pre-commit
 
       - name: Comment on PR
         uses: mshick/add-pr-comment@main
@@ -98,6 +94,7 @@ jobs:
         with:
           branch: staging
           state: open
+
       - name: Confirm/Deny Merge
         run: |
           if [ -n "${{ steps.find-prs.outputs.number }}" ]; then
@@ -113,6 +110,7 @@ jobs:
     name: Test Changes
     needs: check_existing_pr
     runs-on: ubuntu-latest
+    container: nixos/nix    # pre-req for devbox
     steps:
       - name: Checkout Code
         uses: actions/checkout@main
@@ -129,42 +127,20 @@ jobs:
   # ┌───────────────────────────────────────────────────────────────────────┐
   # │ Install Dependencies                                                  │
   # └───────────────────────────────────────────────────────────────────────┘
-      - name: Setup Encore.go
-        run: |
-          # install encore
-          curl -L https://encore.dev/install.sh | bash
-
-          # used to convert go test output to junit (coverage) format
-          echo "Installing go-junit-report"
-          go install github.com/jstemmer/go-junit-report@latest
-
-          # export paths
-          echo "Home dir is: ${HOME}"
-          echo "${GOPATH}"
-          echo "$HOME/.encore/bin" >> $GITHUB_PATH
-          echo "$GOPATH/bin" >> $GITHUB_PATH
-
-          # verify installations
-          go version
-          encore version
-          go-junit-report --version
-
-      - name: Setup npm + reports directory
-        working-directory: ./frontend
-        run: |
-          npm install
-          echo "Creating test-results directory"
-          mkdir -p ../test-results
+      - name: DevBox - Install
+        uses: jetify-com/devbox-install-action@main
+        with:
+          enable-cache: 'true'
 
   # ┌──────────────────────────────────────────────────────────────────────────┐
   # │ Perform testing                                                          │
   # └──────────────────────────────────────────────────────────────────────────┘
-      - name: Test Backend - Encore.Go
-        run: encore test ./note ./pexels -cover | go-junit-report -set-exit-code > test-results/backend-report.xml
+      # Note: Devbox reads env vars - dumped by Doppler
+      - name: Backend - Perform Testing
+        run: devbox run test_be
 
-      - name: Test Frontend - Node/Jest
-        run: npm test
-        working-directory: ./frontend
+      - name: Frontend - Perform Testing
+        run: devbox run test_fe
 
   # ┌───────────────────────────────────────────────────────────────────────┐
   # │ Post Results                                                          │
