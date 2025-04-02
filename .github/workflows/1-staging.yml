@@ -139,7 +139,16 @@ jobs:
 
       - name: Comment on PR
         run: |
+          # Define PR number and comments
           PR_NUM=$(gh pr view --json number -q .number)
+          comments=$(gh pr view $PR_NUM --json comments --jq '.comments[] | select(.body | startswith("## ✅ The Staging Env has successfully spun up")) | .id')
+
+          # Remove old comments
+          for comment_id in $comments; do
+            gh pr comment delete $comment_id --repo "jomakori/notes-app"
+          done
+
+          # Post the new comment
           gh pr comment $PR_NUM --repo "jomakori/notes-app" --body "$msg"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

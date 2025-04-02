@@ -69,6 +69,25 @@ jobs:
         with:
           extra_args: --files ${{ steps.changed-files.outputs.all_changed_files }}
 
+      - name: Comment on PR
+        run: |
+          # Define PR number and comments
+          PR_NUM=$(gh pr view --json number -q .number)
+          comments=$(gh pr view $PR_NUM --json comments --jq '.comments[] | select(.body | startswith("## ✅ The Staging Env has successfully spun up")) | .id')
+
+          # Remove old comments
+          for comment_id in $comments; do
+            gh pr comment delete $comment_id --repo "jomakori/notes-app"
+          done
+
+          # Post the new comment
+          gh pr comment $PR_NUM --repo "jomakori/notes-app" --body "$msg"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          msg: |
+            > Note: If this is a `WIP` PR - make sure this PR is pointed to the `staging` branch.
+            When you merge the PR, `testing` will trigger - otherwise it can be manually triggered via the UI
+
       - name: Fail-catch - Pre-commit Checks
         if: ${{ failure() && steps.precommit.conclusion == 'failure' }}
         uses: actions/github-script@main
@@ -100,6 +119,7 @@ jobs:
           else
             echo "Changes are ready for merge..."
           fi
+
   test:
     name: Test Changes
     needs: check_existing_pr
@@ -121,16 +141,19 @@ jobs:
   # │ Install Dependencies                                                  │
   # └───────────────────────────────────────────────────────────────────────┘
       - name: Backend - Install Encore
-        run: curl -L https://encore.dev/install.sh | bash
+        run: |
+          curl -L https://encore.dev/install.sh | bash
+          echo 'export PATH=$PATH:$HOME/.encore/bin' >> $GITHUB_ENV
 
-      - name: Frontend - Install Node.js deps
+      - name: Frontend - Install npm deps
         run: npm install
         working-directory: ./frontend
 
       - name: Setup other deps
         run: |
-          echo "Installing go-junit-report creator"
+          echo "Installing go-junit-report"
           go install github.com/jstemmer/go-junit-report@latest
+          echo 'export PATH=$PATH:$HOME/.go/bin' >> $GITHUB_ENV
 
           echo "Creating test-results directory"
           mkdir -p test-results
