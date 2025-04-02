@@ -129,23 +129,30 @@ jobs:
   # ┌───────────────────────────────────────────────────────────────────────┐
   # │ Install Dependencies                                                  │
   # └───────────────────────────────────────────────────────────────────────┘
-      - name: Backend - Install Encore
+      - name: Setup Encore.go
         run: |
+          # install encore
           curl -L https://encore.dev/install.sh | bash
-          '$HOME/.encore/bin' >> $GITHUB_PATH
 
-      - name: Frontend - Install npm deps
-        run: npm install
-        working-directory: ./frontend
-
-      - name: Setup other deps
-        run: |
+          # used to convert go test output to junit (coverage) format
           echo "Installing go-junit-report"
           go install github.com/jstemmer/go-junit-report@latest
-          '$HOME/.go/bin' >> $GITHUB_PATH
 
+          # export paths
+          echo "$HOME/.encore/bin" >> $GITHUB_PATH
+          echo "$HOME/.go/bin" >> $GITHUB_PATH
+
+          # verify installations
+          go -v
+          encore -v
+          go-junit-report -v
+
+      - name: Setup npm + reports directory
+        working-directory: ./frontend
+        run: |
+          npm install
           echo "Creating test-results directory"
-          mkdir -p test-results
+          mkdir -p ../test-results
 
   # ┌──────────────────────────────────────────────────────────────────────────┐
   # │ Perform testing                                                          │
