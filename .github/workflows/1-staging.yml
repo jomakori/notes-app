@@ -136,6 +136,9 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@main
+        with:
+          lfs: true
+          fetch-depth: 0
 
       - name: Comment on PR
         run: |
