@@ -121,19 +121,27 @@ jobs:
   # │ Install Dependencies                                                  │
   # └───────────────────────────────────────────────────────────────────────┘
       - name: Backend - Install Encore
-        run: curl -L https://encore.dev/install.sh | bash
+        run: |
+          curl -L https://encore.dev/install.sh | bash
+          echo 'export PATH=$PATH:$HOME/.encore/bin' >> $GITHUB_ENV
+
+      - name: Setup other deps
+        run: |
+          echo "Installing go-junit-report"
+          go install github.com/jstemmer/go-junit-report@latest
+          echo 'export PATH=$PATH:$HOME/.go/bin' >> $GITHUB_ENV
+
+          echo "Creating test-results directory"
+          mkdir -p test-results
 
       - name: Frontend - Install Node.js deps
         run: npm install
         working-directory: ./frontend
 
-      - name: Setup other deps
+      - name: Run tests
         run: |
-          echo "Installing go-junit-report creator"
-          go install github.com/jstemmer/go-junit-report@latest
+          encore test ./note ./pexels -cover | go-junit-report -set-exit-code > test-results/backend-report.xml
 
-          echo "Creating test-results directory"
-          mkdir -p test-results
 
   # ┌──────────────────────────────────────────────────────────────────────────┐
   # │ Perform testing                                                          │
