@@ -1,6 +1,54 @@
 {
   "lockfile_version": "1",
   "packages": {
+    "docker-buildx@latest": {
+      "last_modified": "2025-03-26T18:47:43Z",
+      "resolved": "github:NixOS/nixpkgs/bd3bac8bfb542dbde7ffffb6987a1a1f9d41699f#docker-buildx",
+      "source": "devbox-search",
+      "version": "0.22.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/pk7l1ddfbi8df94difwj3kzb4c9fnq9l-docker-buildx-0.22.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/pk7l1ddfbi8df94difwj3kzb4c9fnq9l-docker-buildx-0.22.0"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/q144q18qfn8dq6sa4acyjz4xzh098gii-docker-buildx-0.22.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/q144q18qfn8dq6sa4acyjz4xzh098gii-docker-buildx-0.22.0"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/4zh9q4ny9l7y3hjj4ici6rkpfs4sq4z2-docker-buildx-0.22.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/4zh9q4ny9l7y3hjj4ici6rkpfs4sq4z2-docker-buildx-0.22.0"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/bg3xs9zhmanwby6vrss2i46pvqnkadgd-docker-buildx-0.22.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/bg3xs9zhmanwby6vrss2i46pvqnkadgd-docker-buildx-0.22.0"
+        }
+      }
+    },
     "github:NixOS/nixpkgs/nixpkgs-unstable": {
       "resolved": "github:NixOS/nixpkgs/b7ba7f9f45c5cd0d8625e9e217c28f8eb6a19a76?lastModified=1743568003&narHash=sha256-ZID5T65E8ruHqWRcdvZLsczWDOAWIE7om%2BvQOREwiX0%3D"
     },

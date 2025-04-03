@@ -1,35 +1,49 @@
 {
-    "packages": [
-        "go@latest",
-        "nodejs@latest",
-        "go-junit-report@latest",
-        "pre-commit@latest",
-        "golangci-lint@latest",
-        "github:encoredev/encore-flake"
-    ],
-    "shell": {
-        "scripts": {
-            "test_fe": [
-                "echo 'Performing tests on the Frontend'",
-                "echo 'Creating test-results dir' && mkdir -p test-results",
-                "cd frontend && npm install && npm test"
-            ],
-            "test_be": [
-                "echo 'Performing tests on the Backend'",
-                "echo 'Creating test-results dir' && mkdir -p test-results",
-                "encore test ./note ./pexels -cover && encore test ./note ./pexels -cover -v 2>&1 | go-junit-report -set-exit-code > test-results/backend-report.xml"
-            ],
-            "pre-commit": [
-                "pre-commit run --all-files"
-            ],
-            "deploy": [
-                "cd apps/helm/notes-app",
-                "yq -i e '.environments[${ENV_NUM}].image.tag = env(CONTAINER_TAG)| (... | select(tag == \"!!merge\")) tag = \"\"' values.yaml",
-                "if [[ -z $(git status -s) ]]; then echo \"The container tags have already been updated to: $IMAGE_TAG. Deployment skipped...\" && exit 0; fi",
-                "git add .",
-                "git commit -m ${GIT_MESSAGE}",
-                "git push"
-            ]
-        }
+  "packages": [
+    "go@latest",
+    "nodejs@latest",
+    "go-junit-report@latest",
+    "pre-commit@latest",
+    "golangci-lint@latest",
+    "github:encoredev/encore-flake",
+    "docker-buildx@latest"
+  ],
+  "shell": {
+    "scripts": {
+      "test_fe": [
+        "echo 'Performing tests on the Frontend'",
+        "echo 'Creating test-results dir' && mkdir -p test-results",
+        "cd frontend && npm install && npm test"
+      ],
+      "test_be": [
+        "echo 'Performing tests on the Backend'",
+        "echo 'Creating test-results dir' && mkdir -p test-results",
+        "encore test ./note ./pexels -cover && encore test ./note ./pexels -cover -v 2>&1 | go-junit-report -set-exit-code > test-results/backend-report.xml"
+      ],
+      "pre-commit": [
+        "pre-commit run --all-files"
+      ],
+      "deploy": [
+        "cd apps/helm/notes-app",
+        "yq -i e '.environments[${ENV_NUM}].image.tag = env(CONTAINER_TAG)| (... | select(tag == \"!!merge\")) tag = \"\"' values.yaml",
+        "if [[ -z $(git status -s) ]]; then echo \"The container tags have already been updated to: $IMAGE_TAG. Deployment skipped...\" && exit 0; fi",
+        "git add .",
+        "git commit -m ${GIT_MESSAGE}",
+        "git push"
+      ],
+      "build_backend": [
+        "echo 'Authenticate GHCR registry'",
+        "echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin",
+        "echo 'Build/Push Backend image'",
+        "encore build -t $IMAGE_NAME:$IMAGE_TAG --config encore.prod.json",
+        "docker push $IMAGE_NAME:$IMAGE_TAG"
+      ],
+      "build_frontend": [
+        "echo 'Authenticate GHCR registry'",
+        "echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin",
+        "echo 'Build/Push Frontend image' && cd frontend",
+        "docker buildx build --tag $IMAGE_NAME:$IMAGE_TAG --cache-from 'type=registry,ref=${REPO}:cache' --cache-to 'type=registry,ref=${REPO}:cache,mode=max' --push ."
+      ]
     }
+  }
 }

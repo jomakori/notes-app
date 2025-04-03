@@ -145,21 +145,15 @@ jobs:
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-backend
           IMAGE_TAG: ${{ steps.version.outputs.semantic_version }} # Since it was changed post-fetch
         run: |
-          encore build docker $IMAGE_NAME:$IMAGE_TAG --config encore.prod.json
-          docker push $IMAGE_NAME:$IMAGE_TAG
+          devbox run build_backend
 
       - name: Frontend - Build & Push image
         env:
+          REPO: ${{ github.repository }}
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-frontend
           IMAGE_TAG: ${{ steps.version.outputs.semantic_version }} # Since it was changed post-fetch
-        uses: docker/build-push-action@v4
-        with:
-          context: frontend
-          push: true
-          tags: $IMAGE_NAME:$IMAGE_TAG
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/amd64
+        run: |
+          devbox run build_frontend
 
   deploy:
     name: Deploy Staging
