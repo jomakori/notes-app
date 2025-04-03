@@ -73,10 +73,11 @@ jobs:
 
       - name: Create Release PR
         if: steps.check-pr.outputs.exists == '0'
-        uses: peter-evans/create-pull-request@main
+        uses: devops-infra/action-pull-request@master
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: main
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          source_branch: staging
+          target_branch: main
           title: ${{ steps.get-pr.outputs.title }}
           body: |
             ## Release PR
@@ -85,8 +86,8 @@ jobs:
 
             ### Original PR Details:
             ${{ steps.get-pr.outputs.body }}
-          labels: release
-          assignees: ${{ steps.get-pr.outputs.author }}
+          label: release
+          assignee: ${{ steps.get-pr.outputs.author }}
 
   build:
     name: Build Staging
