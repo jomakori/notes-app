@@ -41,7 +41,7 @@ jobs:
             echo "::notice::No Release PR exists. Creating one now."
           fi
 
-      - name: Grab Latest Merged PR Info
+      - name: Grab info for Release PR
         if: steps.check-pr.outputs.exists == '0'
         id: get-pr
         env:
@@ -71,13 +71,12 @@ jobs:
           } >> $GITHUB_OUTPUT
 
 
-      - name: Create Pull Request
+      - name: Create Release PR
         if: steps.check-pr.outputs.exists == '0'
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: main
-          branch: staging
           title: ${{ steps.get-pr.outputs.title }}
           body: |
             ## Release PR
