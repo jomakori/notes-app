@@ -50,16 +50,26 @@ jobs:
           # Get latest merged PR from staging
           PR_DATA=$(gh pr list --base staging --state merged --limit 1 --json number,title,body,author --jq '.[0]')
 
-          # Store PR info
-          declare -A PR_INFO
-          PR_INFO[title]=$(echo "$PR_DATA" | jq -r '.title')
-          PR_INFO[body]=$(echo "$PR_DATA" | jq -r '.body')
-          PR_INFO[author]=$(echo "$PR_DATA" | jq -r '.author.login')
+          # Extract PR info
+          title=$(echo "$PR_DATA" | jq -r '.title')
+          body=$(echo "$PR_DATA" | jq -r '.body')
+          author=$(echo "$PR_DATA" | jq -r '.author.login')
 
-          # Set outputs
-          echo "title=${PR_INFO[title]}" >> $GITHUB_OUTPUT
-          echo "body=${PR_INFO[body]}" >> $GITHUB_OUTPUT
-          echo "author=${PR_INFO[author]}" >> $GITHUB_OUTPUT
+          # Set outputs for the next step - w/ multiline support
+          {
+            echo "title<<EOF"
+            echo "$title"
+            echo "EOF"
+
+            echo "body<<EOF"
+            echo "$body"
+            echo "EOF"
+
+            echo "author<<EOF"
+            echo "$author"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
 
       - name: Create Pull Request
         if: steps.check-pr.outputs.exists == '0'
