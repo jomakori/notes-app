@@ -28,3 +28,10 @@ repos:
       - id: codespell
         args:
           - --skip=**/package-lock.json,**/CoverSelector.tsx,**/client.ts,frontend/coverage/**
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.4.1
+    hooks:
+      - id: commitizen
+      - id: commitizen-branch
+        stages: [pre-push]

@@ -16,11 +16,68 @@ on:
 permissions: write-all
 
 jobs:
+  create-release-pr:
+    name: Create Release PR (conditional)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Existing Release PR
+        id: check-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Define
+          EXISTS=$(gh pr list --base main --head staging --state open --json number --jq 'length')
+          echo "exists=$EXISTS" >> $GITHUB_OUTPUT
+
+          # Determine
+          if [ "$EXISTS" != "0" ]; then
+            echo "::notice::Release PR already exists. Skipping creation."
+          fi
+      - name: Checkout Code
+        if: steps.check-pr.outputs.exists == '0'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for all branches
+
+      - name: Grab Latest Merged PR Info
+        if: steps.check-pr.outputs.exists == '0'
+        id: get-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the latest merged PR to staging
+          PR_INFO=$(gh pr list --base staging --state merged --limit 1 --json number,title,body,author --jq '.[0]')
+          PR_TITLE=$(echo "$PR_INFO" | jq -r '.title')
+          PR_BODY=$(echo "$PR_INFO" | jq -r '.body')
+          PR_AUTHOR=$(echo "$PR_INFO" | jq -r '.author.login')
+
+          # Set outputs
+          echo "title=$PR_TITLE" >> $GITHUB_OUTPUT
+          echo "body=$PR_BODY" >> $GITHUB_OUTPUT
+          echo "author=$PR_AUTHOR" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.check-pr.outputs.exists == '0'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          branch: staging
+          title: ${{ steps.get-pr.outputs.title }}
+          body: |
+            ## Release PR
+
+            This PR releases changes from staging to production.
+
+            ### Original PR Details:
+            ${{ steps.get-pr.outputs.body }}
+          labels: release
+          assignees: ${{ steps.get-pr.outputs.author }}
+
   build:
     name: Build Staging
     environment: staging
     runs-on: ubuntu-latest
-    container: encoredotdev/encore:latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@main
@@ -37,7 +94,7 @@ jobs:
           doppler-token: ${{ secrets.STG_DOPPLER_TOKEN }}
           inject-env-vars: true
 
-      - name: Set App version - by PR number
+      - name: Set versioning - via PR number
         id: version
         env:
           DOPPLER_TOKEN: ${{ secrets.STG_DOPPLER_TOKEN }}
@@ -113,8 +170,8 @@ jobs:
       - name: Deploy Staging
         env:
           CONTAINER_TAG: ${{ steps.doppler.outputs.SEMANTIC_VERSION }} #retrieved from build step
-          ENV_NUM: 0    # staging env
-          GIT_MESSAGE: 'deploy(notes-app): Test changes in: ${CONTAINER_TAG}'
+          ENV_NUM: 0 # staging env
+          GIT_MESSAGE: "deploy(notes-app): Test changes in: ${CONTAINER_TAG}"
         run: |
           # Login Git
           git config --global user.email $GH_USER_EMAIL

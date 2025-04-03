@@ -36,7 +36,7 @@ jobs:
           doppler-token: ${{ secrets.PROD_DOPPLER_TOKEN }}
           inject-env-vars: true
 
-      - name: Set App version - by Semantic Release
+      - name: Set versioning - via Semantic Release
         id: semantic
         uses: cycjimmy/semantic-release-action@main
         env:
