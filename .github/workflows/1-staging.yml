@@ -47,16 +47,19 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Get the latest merged PR to staging
-          PR_INFO=$(gh pr list --base staging --state merged --limit 1 --json number,title,body,author --jq '.[0]')
-          PR_TITLE=$(echo "$PR_INFO" | jq -r '.title')
-          PR_BODY=$(echo "$PR_INFO" | jq -r '.body')
-          PR_AUTHOR=$(echo "$PR_INFO" | jq -r '.author.login')
+          # Get latest merged PR from staging
+          PR_DATA=$(gh pr list --base staging --state merged --limit 1 --json number,title,body,author --jq '.[0]')
+
+          # Store PR info
+          declare -A PR_INFO
+          PR_INFO[title]=$(echo "$PR_DATA" | jq -r '.title')
+          PR_INFO[body]=$(echo "$PR_DATA" | jq -r '.body')
+          PR_INFO[author]=$(echo "$PR_DATA" | jq -r '.author.login')
 
           # Set outputs
-          echo "title=$PR_TITLE" >> $GITHUB_OUTPUT
-          echo "body=$PR_BODY" >> $GITHUB_OUTPUT
-          echo "author=$PR_AUTHOR" >> $GITHUB_OUTPUT
+          echo "title=${PR_INFO[title]}" >> $GITHUB_OUTPUT
+          echo "body=${PR_INFO[body]}" >> $GITHUB_OUTPUT
+          echo "author=${PR_INFO[author]}" >> $GITHUB_OUTPUT
 
       - name: Create Pull Request
         if: steps.check-pr.outputs.exists == '0'
@@ -78,6 +81,7 @@ jobs:
 
   build:
     name: Build Staging
+    needs: create-release-pr
     environment: staging
     runs-on: ubuntu-latest
     steps:
