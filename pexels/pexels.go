@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"net/url"
 	"os"
 )
 
@@ -23,7 +25,7 @@ type SearchResponse struct {
 //encore:api public method=GET path=/images/:query
 func SearchPhoto(ctx context.Context, query string) (*SearchResponse, error) {
 	// Create a new http client to proxy the request to the Pexels API.
-	URL := "https://api.pexels.com/v1/search?query=" + query
+	URL := "https://api.pexels.com/v1/search?query=" + url.QueryEscape(query)
 	client := &http.Client{}
 	req, _ := http.NewRequest("GET", URL, nil)
 
@@ -35,10 +37,14 @@ func SearchPhoto(ctx context.Context, query string) (*SearchResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func() {
+		if cerr := res.Body.Close(); cerr != nil {
+			log.Printf("Error closing response body: %v", cerr)
+		}
+	}()
 
 	if res.StatusCode >= 400 {
-		return nil, fmt.Errorf("Pexels API error: %s", res.Status)
+		return nil, fmt.Errorf("pexels API error: %s", res.Status)
 	}
 
 	// Decode the data into the searchResponse struct.

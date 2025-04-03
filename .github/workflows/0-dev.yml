@@ -1,19 +1,25 @@
-#  ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-#  │ Purpose:                                                                                                         │
-#  │ - Runs checks on commits from feature branches, including:                                                       │
-#  │    - Placing a label on PR                                                                                       │
-#  │    - Running lint checks on each commit                                                                          │
-#  │    - Check for existing Release PR that are open on staging                                                      │
-#  │ - When changes are good, merge to staging queue to run testing:                                                  │
-#  │    - If testing is good -> Merge to staging branch                                                               │
-#  │    - Else               -> reject PR - user will correct errors and resubmit PR to the staging merge queue       │
-#  └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+#  ┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+#  │ Purpose:                                                                                               │
+#  │ - Runs checks on commits from feature branches, including:                                             │
+#  │    - Placing a label on PR                                                                             │
+#  │    - Running lint checks on each commit                                                                │
+#  │    - Check for existing Release PR that are open on staging                                            │
+#  │ - When changes are good, merge to staging queue to run testing (or trigger testing manually):                                        │
+#  │    - If testing is good -> Merge to staging branch                                                     │
+#  │    - Else               -> reject PR - user will correct errors and resubmit PR to the staging queue   │
+#  └────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 name: 0 - Run Checks & Test Changes
 
+# Pipeline permissions
+permissions:
+  contents: read
+  pull-requests: write
+  issues: read
+
 # When to run:
 on:
-  ## Run on commits from feature branch
+  ## Trigger Jobs on PR
   pull_request:
     branches:
       - staging
@@ -22,28 +28,26 @@ on:
       - opened
       - synchronize
       - edited
-
-  ## Run on PR Merge to staging
+  ## Trigger Jobs on Merge Queue
   merge_group:
-    types: [checks_requested]
+    types:
+      - checks_requested
+  ## Trigger Jobs manually
+  workflow_dispatch:
 
 # Jobs to Run:
 jobs:
-  ## Ran only on PR - for initial labeling
+  # ┌─────────────────────────────────────────────────────────────────────────────┐
+  # │   Run jobs for commits to WIP PR                                            │
+  # └─────────────────────────────────────────────────────────────────────────────┘
   label-pr:
     name: Label PR
     if: github.event_name == 'pull_request'
-    permissions:
-      contents: read
-      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/labeler@v5
-
-  ## Ran on commits to feature branch & merge queue
   lint:
     name: Lint Code
-    environment: dev
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -51,12 +55,22 @@ jobs:
         with:
           lfs: true
 
-      - id: changed-files
-        uses: tj-actions/changed-files@main # @v36
-
-      - uses: pre-commit/action@release # @v3.0.1
+      - name: DevBox - Install
+        uses: jetify-com/devbox-install-action@main
         with:
-          extra_args: --files ${{ steps.changed-files.outputs.all_changed_files }}
+          enable-cache: 'true'
+
+      - name: Pre-commit - Lint Testing
+        run:
+          devbox run pre-commit
+
+      - name: Comment on PR
+        uses: mshick/add-pr-comment@main
+        with:
+          message: |
+            ## Lint Checks passed ✅
+            > Note: If this is a `WIP` PR - make sure this PR is pointed to the `staging` branch.
+            When you merge the PR, `testing` will trigger - otherwise it can be manually triggered via the UI
 
       - name: Fail-catch - Pre-commit Checks
         if: ${{ failure() && steps.precommit.conclusion == 'failure' }}
@@ -65,11 +79,12 @@ jobs:
           script: |
             core.setFailed("Run `pre-commit run -a` to fix errors locally before re-committing")
 
-  ## Run only when PR joins merge queue to staging
+  # ┌─────────────────────────────────────────────────────────────────────────────┐
+  # │   Run jobs on Merge Queue or PR Comment 'test'                              │
+  # └─────────────────────────────────────────────────────────────────────────────┘
   check_existing_pr:
     name: Check for existing Release PR
-    if: github.event_name != 'pull_request' || github.event.action == 'enqueued'
-    environment: dev
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'merge_group' && github.event.action == 'enqueued')
     runs-on: ubuntu-latest
     steps:
       - name: Check for Open Release PRs
@@ -82,7 +97,7 @@ jobs:
       - name: Confirm/Deny Merge
         run: |
           if [ -n "${{ steps.find-prs.outputs.number }}" ]; then
-            echo "Merge is rejected - PR #${{ steps.find-prs.outputs.number }} from the staging branch exists."
+            echo "Merge is rejected - There is Release PR #${{ steps.find-prs.outputs.number }} currently on staging."
             echo "Please merge or close it before merging into this branch - to prevent piling commits to a single PR"
             echo "Note: If you want to update existing PR - you must send the commit back to it's feature branch and undo commit on staging"
             exit 1
@@ -92,103 +107,48 @@ jobs:
 
   test:
     name: Test Changes
-    if: github.event_name != 'pull_request' || github.event.action == 'enqueued' # https://github.com/orgs/community/discussions/51120
-    environment: testing
     needs: check_existing_pr
-    runs-on: ubuntu-latest-large # Use custom gh runner - GH hosted
-    services:
-      postgres:
-        image: corpusops/postgis:10
-        env:
-          DATABASE_URL: postgis://postgres@localhost:5432
-          POSTGRES_DB: demoapp
-          POSTGRES_PASSWORD: ""
-          POSTGRES_USER: postgres
-          POSTGRES_HOST_AUTH_METHOD: trust
-        ports:
-          - 5432:5432
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    runs-on: ubuntu-latest
     steps:
-      - name: Fetch Doppler Secrets
-        id: doppler
-        uses: dopplerhq/secrets-fetch-action@main
-        with:
-          doppler-token: ${{ secrets.CI_DOPPLER_TOKEN }}
-          inject-env-vars: true
-
       - name: Checkout Code
         uses: actions/checkout@main
         with:
           lfs: true
 
-      #----------------------------------------------
-      #-----------  Install Dependencies  -----------
-      #----------------------------------------------
-      - name: Setup Python
-        id: setup-python
-        uses: actions/setup-python@main
+      - name: Fetch Doppler Secrets
+        id: doppler
+        uses: dopplerhq/secrets-fetch-action@main
         with:
-          python-version: 3.10.13
+          doppler-token: ${{ secrets.DEV_DOPPLER_TOKEN }}
+          inject-env-vars: true
 
-      - name: Install Poetry
-        uses: snok/install-poetry@main
+  # ┌───────────────────────────────────────────────────────────────────────┐
+  # │ Install Dependencies                                                  │
+  # └───────────────────────────────────────────────────────────────────────┘
+      - name: DevBox - Install
+        uses: jetify-com/devbox-install-action@main
         with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
+          enable-cache: 'true'
 
-      - name: Install gdal dependencies
-        run: |
-          sudo apt-get update && sudo apt-get install -y \
-          gdal-bin \
-          python3-gdal
-      #----------------------------------------------
-      #       load cached venv if cache exists
-      #----------------------------------------------
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@main
+  # ┌──────────────────────────────────────────────────────────────────────────┐
+  # │ Perform testing                                                          │
+  # └──────────────────────────────────────────────────────────────────────────┘
+      # Note: Devbox reads env vars - dumped by Doppler
+      - name: Backend - Perform Testing
+        run: devbox run test_be
+
+      - name: Frontend - Perform Testing
+        run: devbox run test_fe
+
+  # ┌───────────────────────────────────────────────────────────────────────┐
+  # │ Post Results                                                          │
+  # └───────────────────────────────────────────────────────────────────────┘
+      - name: Publish Test Results
+        id: test-report
+        uses: dorny/test-reporter@main
+        if: success() || failure()  # Produce test report, pass or fail
         with:
-          path: .venv
-          key: venv-${{ hashFiles('poetry.lock') }}
-      #----------------------------------------------
-      # install dependencies if cache does not exist
-      #----------------------------------------------
-      - name: Setup Poetry Dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: |
-          poetry install --no-interaction --no-root
-
-      #----------------------------------------------
-      #----------------- Run Tests ------------------
-      #----------------------------------------------
-      - name: Run Tests - MyPy w/ ReviewDog
-        run: |
-          echo "Setup ReviewDog"
-          curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s
-
-          echo "GitHub Comment Bot reporting..."
-          make mypy_no_fail | ./bin/reviewdog -reporter=github-pr-review -efm="%f:%l:%c: %m"
-
-          echo "GitHub Checks reporting..."
-          make mypy_no_fail | ./bin/reviewdog -reporter=github-check -efm="%f:%l:%c: %m" -fail-on-error
-
-      # - name: Run Tests - PyTest Coverage
-      #   timeout-minutes: 10 # To avoid stuck test jobs - see logs for diagnosis
-      # Any issues will be reported on reporter below
-      #   run: |
-      #     make test_with_coverage || true
-
-      # - name: Publish Test Results
-      #   id: pytest
-      #   uses: dorny/test-reporter@main
-      #   if: success() || failure()  # Produce test report, pass or fail
-      #   with:
-      #     name: PyTest Code Coverage # Name of the check run which will be created
-      #     path: "./reports/pytest/test-report.xml" # Path to test results
-      #     reporter: java-junit # works w/ python too
-      #     fail-on-error: "false"
+          name: Test Results # Name of the check run which will be created
+          path: "**/test-results/*.xml" # Path to test results
+          reporter: jest-junit # Use jest-junit for frontend tests
+          fail-on-error: "false"

@@ -1,0 +1,35 @@
+{
+    "packages": [
+        "go@latest",
+        "nodejs@latest",
+        "go-junit-report@latest",
+        "pre-commit@latest",
+        "golangci-lint@latest",
+        "github:encoredev/encore-flake"
+    ],
+    "shell": {
+        "scripts": {
+            "test_fe": [
+                "echo 'Performing tests on the Frontend'",
+                "echo 'Creating test-results dir' && mkdir -p test-results",
+                "cd frontend && npm install && npm test"
+            ],
+            "test_be": [
+                "echo 'Performing tests on the Backend'",
+                "echo 'Creating test-results dir' && mkdir -p test-results",
+                "encore test ./note ./pexels -cover && encore test ./note ./pexels -cover -v 2>&1 | go-junit-report -set-exit-code > test-results/backend-report.xml"
+            ],
+            "pre-commit": [
+                "pre-commit run --all-files"
+            ],
+            "deploy": [
+                "cd apps/helm/notes-app",
+                "yq -i e '.environments[${ENV_NUM}].image.tag = env(CONTAINER_TAG)| (... | select(tag == \"!!merge\")) tag = \"\"' values.yaml",
+                "if [[ -z $(git status -s) ]]; then echo \"The container tags have already been updated to: $IMAGE_TAG. Deployment skipped...\" && exit 0; fi",
+                "git add .",
+                "git commit -m ${GIT_MESSAGE}",
+                "git push"
+            ]
+        }
+    }
+}

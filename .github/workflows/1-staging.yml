@@ -16,18 +16,75 @@ on:
 permissions: write-all
 
 jobs:
+  create-release-pr:
+    name: Create Release PR (conditional)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Existing Release PR
+        id: check-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Define
+          EXISTS=$(gh pr list --base main --head staging --state open --json number --jq 'length')
+          echo "exists=$EXISTS" >> $GITHUB_OUTPUT
+
+          # Determine
+          if [ "$EXISTS" != "0" ]; then
+            echo "::notice::Release PR already exists. Skipping creation."
+          fi
+      - name: Checkout Code
+        if: steps.check-pr.outputs.exists == '0'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for all branches
+
+      - name: Grab Latest Merged PR Info
+        if: steps.check-pr.outputs.exists == '0'
+        id: get-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the latest merged PR to staging
+          PR_INFO=$(gh pr list --base staging --state merged --limit 1 --json number,title,body,author --jq '.[0]')
+          PR_TITLE=$(echo "$PR_INFO" | jq -r '.title')
+          PR_BODY=$(echo "$PR_INFO" | jq -r '.body')
+          PR_AUTHOR=$(echo "$PR_INFO" | jq -r '.author.login')
+
+          # Set outputs
+          echo "title=$PR_TITLE" >> $GITHUB_OUTPUT
+          echo "body=$PR_BODY" >> $GITHUB_OUTPUT
+          echo "author=$PR_AUTHOR" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.check-pr.outputs.exists == '0'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          branch: staging
+          title: ${{ steps.get-pr.outputs.title }}
+          body: |
+            ## Release PR
+
+            This PR releases changes from staging to production.
+
+            ### Original PR Details:
+            ${{ steps.get-pr.outputs.body }}
+          labels: release
+          assignees: ${{ steps.get-pr.outputs.author }}
+
   build:
     name: Build Staging
     environment: staging
     runs-on: ubuntu-latest
-    container: encoredotdev/encore:latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@main
         with:
           lfs: true
 
-      - name: Install CLI
+      - name: Install Doppler CLI
         uses: dopplerhq/cli-action@master
 
       - name: Fetch Doppler Secrets
@@ -37,7 +94,7 @@ jobs:
           doppler-token: ${{ secrets.STG_DOPPLER_TOKEN }}
           inject-env-vars: true
 
-      - name: Set/Save Semantic Version
+      - name: Set versioning - via PR number
         id: version
         env:
           DOPPLER_TOKEN: ${{ secrets.STG_DOPPLER_TOKEN }}
@@ -66,22 +123,27 @@ jobs:
           script: |
             core.setFailed("Semantic version is null. See logs.")
 
-      - name: Backend - Build & Push
+      - name: Backend - Build & Push image
         env:
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-backend
           IMAGE_TAG: ${{ steps.version.outputs.semantic_version }} # Since it was changed post-fetch
         run: |
-          encore build docker note-app:$IMAGE_TAG --config encore.prod.json
+          encore build docker $IMAGE_NAME:$IMAGE_TAG --config encore.prod.json
           docker push $IMAGE_NAME:$IMAGE_TAG
 
-      - name: Frontend - Build & Push
+      - name: Frontend - Build & Push image
         env:
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-frontend
           IMAGE_TAG: ${{ steps.version.outputs.semantic_version }} # Since it was changed post-fetch
-        run: |
-          cd frontend
-          docker build -t $IMAGE_NAME:$IMAGE_TAG .
-          docker push $IMAGE_NAME:$IMAGE_TAG
+        uses: docker/build-push-action@v4
+        with:
+          context: frontend
+          push: true
+          tags: $IMAGE_NAME:$IMAGE_TAG
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
   deploy:
     name: Deploy Staging
     needs: build
@@ -108,29 +170,14 @@ jobs:
       - name: Deploy Staging
         env:
           CONTAINER_TAG: ${{ steps.doppler.outputs.SEMANTIC_VERSION }} #retrieved from build step
+          ENV_NUM: 0 # staging env
+          GIT_MESSAGE: "deploy(notes-app): Test changes in: ${CONTAINER_TAG}"
         run: |
           # Login Git
-          git config --global user.email "joe3rdwash@gmail.com"
-          git config --global user.name "Joel Makori"
+          git config --global user.email $GH_USER_EMAIL
+          git config --global user.name $GH_USER
 
-          # Backend - Update image tag in Helm Chart
-          cd apps/helm/notes-app-backend
-          yq -i e '.environments[0].image.tag = env(CONTAINER_TAG)| (... | select(tag == "!!merge")) tag = ""' values.yaml
-
-          # Frontend - Update image tag in Helm Chart
-          cd ../notes-app-frontend
-          yq -i e '.environments[0].image.tag = env(CONTAINER_TAG)| (... | select(tag == "!!merge")) tag = ""' values.yaml
-
-          # Confirm changes
-          if [[ -z $(git status -s) ]]; then
-            echo "The container tags have already been updated to: $(IMAGE_TAG). Deployment skipped..."
-            exit 0
-          fi
-
-          # Push Changes - ArgoCD will auto-sync changes in cluster
-          git add .
-          git commit -m "chore(staging) notes-app-backend: Test changes in: ${CONTAINER_TAG}"
-          git push
+          devbox run deploy
 
   comment-pr:
     name: Comment on PR
@@ -140,16 +187,15 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@main
+        with:
+          lfs: true
 
       - name: Comment on PR
-        run: |
-          PR_NUM=$(gh pr view --json number -q .number)
-          gh pr comment $PR_NUM --repo "jomakori/demoapp" --body "$msg"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          msg: |
-            ## ✅ The Staging Env has successfully spun up
-            - ### [Notes App API (backend)](https://staging-demoapp.intrc.net/)
+        uses: mshick/add-pr-comment@main
+        with:
+          message: |
+            ## `Staging` env deployed ✅
+            - ### [Notes App API (backend)](https://staging-notes-app.intrc.net/)
             - ### [Notes App UI (frontend)](https://staging-flower.intrc.net/)
 
             ### Verify deployment by:

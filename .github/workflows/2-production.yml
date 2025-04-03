@@ -18,7 +18,7 @@ permissions: write-all
 jobs:
   build:
     name: Build Release
-    environment: release
+    environment: production
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -36,7 +36,7 @@ jobs:
           doppler-token: ${{ secrets.PROD_DOPPLER_TOKEN }}
           inject-env-vars: true
 
-      - name: Semantic Release
+      - name: Set versioning - via Semantic Release
         id: semantic
         uses: cycjimmy/semantic-release-action@main
         env:
@@ -44,7 +44,7 @@ jobs:
         with:
           ci: true
 
-      - name: Confirm new release
+      - name: Confirm new release (fail-catch)
         if: steps.semantic.outputs.new_release_published == 'false'
         uses: actions/github-script@main
         with:
@@ -57,48 +57,27 @@ jobs:
         env:
           DOPPLER_TOKEN: ${{ secrets.PROD_DOPPLER_TOKEN }}
 
-      - uses: alexellis/arkade-get@master
-        with:
-          jq: latest
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@main
-        with:
-          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@main
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@master
-        with:
-          driver: docker-container
-
-      - name: Build & Push to AWS ECR - w/ cache
-        uses: docker/build-push-action@master
+      - name: Backend - Build & Push image
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_PROD_REPO: ${{ env.AWS_ECR_REPO }}
-          ECR_STAGING_REPO: staging-demoapp
+          IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-backend
           IMAGE_TAG: ${{ steps.semantic.outputs.new_release_version }}
-        with:
-          context: .
-          file: production.yml
-          push: true
-          # Tags & pushes both PROD + Staging images
-          tags:
-            ${{ env.ECR_REGISTRY }}/${{ env.ECR_PROD_REPO }}:${{ env.IMAGE_TAG }},
-            ${{ env.ECR_REGISTRY }}/${{ env.ECR_STAGING_REPO }}:${{ env.IMAGE_TAG }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        run: |
+          encore build -t $IMAGE_NAME:$IMAGE_TAG --config encore.prod.json
+          docker push $IMAGE_NAME:$IMAGE_TAG
+
+      - name: Frontend - Build & Push image
+        env:
+          IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-frontend
+          IMAGE_TAG: ${{ steps.semantic.outputs.new_release_version }}
+        run: |
+          cd frontend
+          docker build -t $IMAGE_NAME:$IMAGE_TAG .
+          docker push $IMAGE_NAME:$IMAGE_TAG
 
   deploy:
-    name: Deploy Release
+    name: Release Production
     needs: build
-    environment: release
+    environment: production
     runs-on: ubuntu-latest
     steps:
       - name: Fetch Doppler Secrets
@@ -121,23 +100,11 @@ jobs:
       - name: Deploy Release
         env:
           CONTAINER_TAG: ${{ steps.doppler.outputs.SEMANTIC_VERSION }} # value refreshed in step
+          ENV_NUM: 0    # staging env
+          GIT_MESSAGE: 'release(notes-app): Upgraded PROD to: ${CONTAINER_TAG}'
         run: |
           # Login Git
-          git config --global user.email "stable.engineering@accenture.com"
-          git config --global user.name "bot-robopony"
+          git config --global user.email $GH_USER_EMAIL
+          git config --global user.name $GH_USER
 
-          # Update container image tag in Kubernetes Manifest
-          cd apps/helm/demoapp
-          echo "Update Staging Image tag..."
-          yq -i e '.environments[1].image.tag = env(CONTAINER_TAG)| (... | select(tag == "!!merge")) tag = ""' values.yaml
-
-          # Check if there are any changes
-          if [[ -z $(git status -s) ]]; then
-            echo "The container tag has already been updated, exiting..."
-            exit 0
-          fi
-
-          # Push Changes - ArgoCD will auto-sync changes in cluster
-          git add .
-          git commit -m "chore(release) demoapp: Upgrade to PROD version: ${CONTAINER_TAG}"
-          git push
+          devbox run deploy
