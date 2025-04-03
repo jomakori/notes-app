@@ -78,10 +78,15 @@ jobs:
         env:
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-frontend
           IMAGE_TAG: ${{ steps.version.outputs.semantic_version }} # Since it was changed post-fetch
-        run: |
-          cd frontend
-          docker build -t $IMAGE_NAME:$IMAGE_TAG .
-          docker push $IMAGE_NAME:$IMAGE_TAG
+        uses: docker/build-push-action@v4
+        with:
+          context: frontend
+          push: true
+          tags: $IMAGE_NAME:$IMAGE_TAG
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
   deploy:
     name: Deploy Staging
     needs: build
@@ -108,25 +113,14 @@ jobs:
       - name: Deploy Staging
         env:
           CONTAINER_TAG: ${{ steps.doppler.outputs.SEMANTIC_VERSION }} #retrieved from build step
+          ENV_NUM: 0    # staging env
+          GIT_MESSAGE: 'deploy(notes-app): Test changes in: ${CONTAINER_TAG}'
         run: |
           # Login Git
-          git config --global user.email "joe3rdwash@gmail.com"
-          git config --global user.name "Joel Makori"
+          git config --global user.email $GH_USER_EMAIL
+          git config --global user.name $GH_USER
 
-          # Frontend/Backend - Update image tag in Helm Chart
-          cd apps/helm/notes-app
-          yq -i e '.environments[0].image.tag = env(CONTAINER_TAG)| (... | select(tag == "!!merge")) tag = ""' values.yaml
-
-          # Confirm changes
-          if [[ -z $(git status -s) ]]; then
-            echo "The container tags have already been updated to: $(IMAGE_TAG). Deployment skipped..."
-            exit 0
-          fi
-
-          # Push Changes - ArgoCD will auto-sync changes in cluster
-          git add .
-          git commit -m "deploy(staging) notes-app: Test changes in: ${CONTAINER_TAG}"
-          git push
+          devbox run deploy
 
   comment-pr:
     name: Comment on PR
