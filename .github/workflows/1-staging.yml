@@ -20,7 +20,12 @@ jobs:
     name: Create Release PR (conditional)
     runs-on: ubuntu-latest
     steps:
-      - name: Check Existing Release PR
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for all branches
+
+      - name: Check for Release PR
         id: check-pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -32,12 +37,9 @@ jobs:
           # Determine
           if [ "$EXISTS" != "0" ]; then
             echo "::notice::Release PR already exists. Skipping creation."
+          else
+            echo "::notice::No Release PR exists. Creating one now."
           fi
-      - name: Checkout Code
-        if: steps.check-pr.outputs.exists == '0'
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Fetch all history for all branches
 
       - name: Grab Latest Merged PR Info
         if: steps.check-pr.outputs.exists == '0'
@@ -98,6 +100,7 @@ jobs:
         id: version
         env:
           DOPPLER_TOKEN: ${{ secrets.STG_DOPPLER_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Get the PR Number
           PR_NUM=$(gh pr view --json number -q .number)
@@ -191,9 +194,12 @@ jobs:
           lfs: true
 
       - name: Comment on PR
-        uses: mshick/add-pr-comment@main
-        with:
-          message: |
+        run: |
+          PR_NUM=$(gh pr view --json number -q .number)
+          gh pr comment $PR_NUM --repo "jomakori/demoapp" --body "$msg"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          msg: |
             ## `Staging` env deployed ✅
             - ### [Notes App API (backend)](https://staging-notes-app.intrc.net/)
             - ### [Notes App UI (frontend)](https://staging-flower.intrc.net/)
