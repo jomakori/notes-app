@@ -41,7 +41,7 @@ jobs:
             echo "::notice::No Release PR exists. Creating one now."
           fi
 
-      - name: Grab info for Release PR
+      - name: Grab Latest Merged PR Info
         if: steps.check-pr.outputs.exists == '0'
         id: get-pr
         env:
@@ -50,34 +50,24 @@ jobs:
           # Get latest merged PR from staging
           PR_DATA=$(gh pr list --base staging --state merged --limit 1 --json number,title,body,author --jq '.[0]')
 
-          # Extract PR info
-          title=$(echo "$PR_DATA" | jq -r '.title')
-          body=$(echo "$PR_DATA" | jq -r '.body')
-          author=$(echo "$PR_DATA" | jq -r '.author.login')
+          # Store PR info
+          declare -A PR_INFO
+          PR_INFO[title]=$(echo "$PR_DATA" | jq -r '.title')
+          PR_INFO[body]=$(echo "$PR_DATA" | jq -r '.body')
+          PR_INFO[author]=$(echo "$PR_DATA" | jq -r '.author.login')
 
-          # Set outputs for the next step - w/ multiline support
-          {
-            echo "title<<EOF"
-            echo "$title"
-            echo "EOF"
+          # Set outputs
+          echo "title=${PR_INFO[title]}" >> $GITHUB_OUTPUT
+          echo "body=${PR_INFO[body]}" >> $GITHUB_OUTPUT
+          echo "author=${PR_INFO[author]}" >> $GITHUB_OUTPUT
 
-            echo "body<<EOF"
-            echo "$body"
-            echo "EOF"
-
-            echo "author<<EOF"
-            echo "$author"
-            echo "EOF"
-          } >> $GITHUB_OUTPUT
-
-
-      - name: Create Release PR
+      - name: Create Pull Request
         if: steps.check-pr.outputs.exists == '0'
-        uses: devops-infra/action-pull-request@master
+        uses: peter-evans/create-pull-request@v5
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          source_branch: staging
-          target_branch: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          branch: staging
           title: ${{ steps.get-pr.outputs.title }}
           body: |
             ## Release PR
@@ -86,8 +76,8 @@ jobs:
 
             ### Original PR Details:
             ${{ steps.get-pr.outputs.body }}
-          label: release
-          assignee: ${{ steps.get-pr.outputs.author }}
+          labels: release
+          assignees: ${{ steps.get-pr.outputs.author }}
 
   build:
     name: Build Staging
@@ -100,14 +90,8 @@ jobs:
         with:
           lfs: true
 
-  # ┌────────────────────────────────────────────────────────────────────────────────────┐
-  # │ Setup Deps                                                                         │
-  # └────────────────────────────────────────────────────────────────────────────────────┘
       - name: Install Doppler CLI
         uses: dopplerhq/cli-action@master
-
-      - name: Install Devbox
-        uses: jetpack-io/devbox-install-action@main
 
       - name: Fetch Doppler Secrets
         id: doppler
@@ -146,23 +130,26 @@ jobs:
           script: |
             core.setFailed("Semantic version is null. See logs.")
 
-  # ┌─────────────────────────────────────────────────────────────────────────────┐
-  # │       Build/push images                                                     │
-  # └─────────────────────────────────────────────────────────────────────────────┘
       - name: Backend - Build & Push image
         env:
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-backend
           IMAGE_TAG: ${{ steps.version.outputs.semantic_version }} # Since it was changed post-fetch
         run: |
-          devbox run build_backend
+          encore build docker $IMAGE_NAME:$IMAGE_TAG --config encore.prod.json
+          docker push $IMAGE_NAME:$IMAGE_TAG
 
       - name: Frontend - Build & Push image
         env:
-          REPO: ${{ github.repository }}
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-frontend
           IMAGE_TAG: ${{ steps.version.outputs.semantic_version }} # Since it was changed post-fetch
-        run: |
-          devbox run build_frontend
+        uses: docker/build-push-action@v4
+        with:
+          context: frontend
+          push: true
+          tags: $IMAGE_NAME:$IMAGE_TAG
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
 
   deploy:
     name: Deploy Staging
