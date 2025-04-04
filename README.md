@@ -8,7 +8,7 @@ Live demo: [https://encoredev.github.io/meeting-notes/](https://encoredev.github
 
 ![Frontend](./images/demo.gif)
 
-The backend uses an SQL database to store meeting notes and has three API endpoints: 
+The backend uses an SQL database to store meeting notes and has three API endpoints:
 * `GET  /note/:id` - Retrieve a note by ID.
 * `POST /note` - Create a new note (or update an existing one).
 * `GET  /images/:query` - Search for images by using the [Pexels API](https://www.pexels.com/api/).
@@ -57,7 +57,7 @@ You can view your backend deploys, metrics and traces at [https://app.encore.dev
 #### Using GitHub pages
 
 1. Create a repo on GitHub
-2. In the `vite.config.js` file, set the `base` property to the name of your repo: 
+2. In the `vite.config.js` file, set the `base` property to the name of your repo:
 ```ts
 base: "/example-meeting-notes/",
 ```
