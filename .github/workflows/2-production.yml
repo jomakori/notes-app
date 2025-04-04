@@ -26,8 +26,14 @@ jobs:
         with:
           lfs: true
 
+  # ┌────────────────────────────────────────────────────────────────────────────────────┐
+  # │ Setup Deps                                                                         │
+  # └────────────────────────────────────────────────────────────────────────────────────┘
       - name: Install Doppler CLI
         uses: dopplerhq/cli-action@master
+
+      - name: Install Devbox
+        uses: jetpack-io/devbox-install-action@main
 
       - name: Fetch Doppler Secrets
         id: doppler
@@ -57,6 +63,9 @@ jobs:
         env:
           DOPPLER_TOKEN: ${{ secrets.PROD_DOPPLER_TOKEN }}
 
+  # ┌─────────────────────────────────────────────────────────────────────────────┐
+  # │       Build/push images                                                     │
+  # └─────────────────────────────────────────────────────────────────────────────┘
       - name: Backend - Build & Push image
         env:
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-backend
