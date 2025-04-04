@@ -23,14 +23,6 @@
       "pre-commit": [
         "pre-commit run --all-files"
       ],
-      "deploy": [
-        "cd apps/helm/notes-app",
-        "yq -i e '.environments[${ENV_NUM}].image.tag = env(CONTAINER_TAG)| (... | select(tag == \"!!merge\")) tag = \"\"' values.yaml",
-        "if [[ -z $(git status -s) ]]; then echo \"The container tags have already been updated to: $IMAGE_TAG. Deployment skipped...\" && exit 0; fi",
-        "git add .",
-        "git commit -m ${GIT_MESSAGE}",
-        "git push"
-      ],
       "build_backend": [
         "echo 'Authenticate GHCR registry'",
         "echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin",
@@ -43,6 +35,14 @@
         "echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin",
         "echo 'Build/Push Frontend image' && cd frontend",
         "docker buildx build --tag $IMAGE_NAME:$IMAGE_TAG --cache-from 'type=registry,ref=${REPO}:cache' --cache-to 'type=registry,ref=${REPO}:cache,mode=max' --push ."
+      ],
+      "deploy": [
+        "cd apps/helm/notes-app",
+        "yq -i e '.environments[${ENV_NUM}].image.tag = env(CONTAINER_TAG)| (... | select(tag == \"!!merge\")) tag = \"\"' values.yaml",
+        "if [[ -z $(git status -s) ]]; then echo \"The container tags have already been updated to: $IMAGE_TAG. Deployment skipped...\" && exit 0; fi",
+        "git add .",
+        "git commit -m ${GIT_MESSAGE}",
+        "git push"
       ]
     }
   }

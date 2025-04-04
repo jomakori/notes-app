@@ -108,6 +108,8 @@ jobs:
 
       - name: Install Devbox
         uses: jetpack-io/devbox-install-action@main
+        with:
+          enable-cache: true
 
       - name: Fetch Doppler Secrets
         id: doppler
@@ -153,6 +155,7 @@ jobs:
         env:
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-backend
           IMAGE_TAG: ${{ steps.version.outputs.semantic_version }} # Since it was changed post-fetch
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           devbox run build_backend
 
@@ -161,6 +164,7 @@ jobs:
           REPO: ${{ github.repository }}
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-frontend
           IMAGE_TAG: ${{ steps.version.outputs.semantic_version }} # Since it was changed post-fetch
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           devbox run build_frontend
 

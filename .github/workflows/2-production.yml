@@ -34,6 +34,8 @@ jobs:
 
       - name: Install Devbox
         uses: jetpack-io/devbox-install-action@main
+        with:
+          enable-cache: true
 
       - name: Fetch Doppler Secrets
         id: doppler
