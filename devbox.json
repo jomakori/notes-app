@@ -25,18 +25,18 @@
       ],
       "build_backend": [
         "echo 'Checking if required environment variables are set'",
-        "bash -c 'for var in GITHUB_TOKEN GITHUB_USER IMAGE_NAME IMAGE_TAG REPO; do [ -z \"${!var}\" ] && { echo \"Error: $var is not set.\"; exit 1; }; done'",
+        "bash -c 'for var in GITHUB_TOKEN GH_USER IMAGE_NAME IMAGE_TAG REPO; do [ -z \"${!var}\" ] && { echo \"Error: $var is not set.\"; exit 1; }; done'",
         "echo 'Authenticate GHCR registry'",
-        "echo $GITHUB_TOKEN | docker login --username $GITHUB_USER --password-stdin ghcr.io",
+        "echo $GITHUB_TOKEN | docker login --username $GH_USER --password-stdin ghcr.io",
         "echo 'Build/Push Backend image'",
         "encore build -t $IMAGE_NAME:$IMAGE_TAG --config encore.prod.json",
         "docker push $IMAGE_NAME:$IMAGE_TAG"
       ],
       "build_frontend": [
         "echo 'Checking if required environment variables are set'",
-        "bash -c 'for var in GITHUB_TOKEN GITHUB_USER IMAGE_NAME IMAGE_TAG REPO; do [ -z \"${!var}\" ] && { echo \"Error: $var is not set.\"; exit 1; }; done'",
+        "bash -c 'for var in GITHUB_TOKEN GH_USER IMAGE_NAME IMAGE_TAG REPO; do [ -z \"${!var}\" ] && { echo \"Error: $var is not set.\"; exit 1; }; done'",
         "echo 'Authenticate GHCR registry'",
-        "echo $GITHUB_TOKEN | docker login --username $GITHUB_USER --password-stdin ghcr.io",
+        "echo $GITHUB_TOKEN | docker login --username $GH_USER --password-stdin ghcr.io",
         "echo 'Build/Push Frontend image' && cd frontend",
         "docker buildx build --tag $IMAGE_NAME:$IMAGE_TAG --cache-from 'type=registry,ref=${REPO}:cache' --cache-to 'type=registry,ref=${REPO}:cache,mode=max' --push ."
       ],
