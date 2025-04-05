@@ -28,7 +28,7 @@
         "for var in GITHUB_TOKEN GH_USER IMAGE_NAME IMAGE_TAG; do eval \"value=\\$$var\"; [ -z \"$value\" ] && { echo \"Error: $var is not set.\"; exit 1; }; done",
         "echo \"$GITHUB_TOKEN\" | docker login ghcr.io --username \"$GH_USER\" --password-stdin",
         "echo 'Build/Push Backend image'",
-        "encore build -t \"$IMAGE_NAME:$IMAGE_TAG\" --config encore.prod.json",
+        "encore build \"$IMAGE_NAME:$IMAGE_TAG\" --config encore.prod.json",
         "docker push \"$IMAGE_NAME:$IMAGE_TAG\""
       ],
       "build_frontend": [
