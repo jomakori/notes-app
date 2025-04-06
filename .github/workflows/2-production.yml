@@ -106,7 +106,7 @@ jobs:
         uses: actions/checkout@main
         with:
           repository: jomakori/gke_GitOps
-          token: ${{ steps.doppler.outputs.GITHUB_TOKEN }}
+          token: ${{ steps.doppler.outputs.GITOPS_GH_TOKEN }}
 
       - name: Deploy Release
         env:

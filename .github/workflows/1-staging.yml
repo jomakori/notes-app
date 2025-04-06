@@ -189,7 +189,7 @@ jobs:
         uses: actions/checkout@main
         with:
           repository: jomakori/gke_GitOps
-          token: ${{ steps.doppler.outputs.GITHUB_TOKEN }}
+          token: ${{ steps.doppler.outputs.GITOPS_GH_TOKEN }}
 
       - name: Deploy Staging
         env:
@@ -197,10 +197,6 @@ jobs:
           ENV_NUM: 0 # staging env
           GIT_MESSAGE: "deploy(notes-app): Test changes in: ${CONTAINER_TAG}"
         run: |
-          # Login Git
-          git config --global user.email $GH_USER_EMAIL
-          git config --global user.name $GH_USER
-
           devbox run deploy
 
   comment-pr:
