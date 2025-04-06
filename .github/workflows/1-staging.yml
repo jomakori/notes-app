@@ -219,9 +219,10 @@ jobs:
       - name: Comment on PR
         run: |
           PR_NUM=$(gh pr view --json number -q .number)
-          gh pr comment $PR_NUM --repo "jomakori/demoapp" --body "$msg"
+          gh pr comment $PR_NUM --repo $REPO --body "$msg"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
           msg: |
             ## `Staging` env deployed ✅
             - ### [Notes App API (backend)](https://staging-notes-app.intrc.net/)
