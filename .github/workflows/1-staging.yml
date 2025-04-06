@@ -164,7 +164,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-frontend
           IMAGE_TAG: ${{ steps.version.outputs.semantic_version }} # Since it was changed post-fetch
-          REPO: ${{ github.repository }}
+          REPO: ghcr.io/${{ github.repository }}
         run: |
           devbox run build_frontend
 
