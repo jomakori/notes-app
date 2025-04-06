@@ -37,7 +37,8 @@
         "echo 'Authenticate GHCR registry'",
         "echo \"$GITHUB_TOKEN\" | docker login ghcr.io --username \"$GH_USER\" --password-stdin",
         "echo 'Build/Push Frontend image' && cd frontend",
-        "docker buildx build --tag \"$IMAGE_NAME:$IMAGE_TAG\" --cache-from \"type=registry,ref=${REPO}:cache\" --cache-to \"type=registry,ref=${REPO}:cache,mode=max\" --push ."
+        "docker buildx create --use --name ci_build || true",
+        "docker buildx build --builder ci_build --tag \"$IMAGE_NAME:$IMAGE_TAG\" --cache-from \"type=registry,ref=${REPO}:cache\" --cache-to \"type=registry,ref=${REPO}:cache,mode=max\" --push ."
       ],
       "deploy": [
         "cd apps/helm/notes-app",
