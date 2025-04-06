@@ -174,16 +174,14 @@ jobs:
     environment: staging
     runs-on: ubuntu-latest
     steps:
+  # ┌─────────────────────────────────────────────────────────────────────────────┐
+  # │       Setup deps                                                            │
+  # └─────────────────────────────────────────────────────────────────────────────┘
       - name: Fetch Doppler Secrets
         id: doppler
         uses: dopplerhq/secrets-fetch-action@main
         with:
           doppler-token: ${{ secrets.STG_DOPPLER_TOKEN }}
-          inject-env-vars: true
-
-      - uses: alexellis/arkade-get@master
-        with:
-          yq: latest
 
       - name: Checkout Helm Chart
         uses: actions/checkout@main
@@ -191,11 +189,19 @@ jobs:
           repository: jomakori/gke_GitOps
           token: ${{ steps.doppler.outputs.GITOPS_GH_TOKEN }}
 
+      - name: Install Devbox
+        uses: jetpack-io/devbox-install-action@main
+        with:
+          enable-cache: true
+
+  # ┌─────────────────────────────────────────────────────────────────────────────┐
+  # │       Deploy env                                                            │
+  # └─────────────────────────────────────────────────────────────────────────────┘
       - name: Deploy Staging
         env:
           CONTAINER_TAG: ${{ steps.doppler.outputs.SEMANTIC_VERSION }} #retrieved from build step
           ENV_NUM: 0 # staging env
-          GIT_MESSAGE: "deploy(notes-app): Test changes in: ${CONTAINER_TAG}"
+          GIT_MESSAGE: "deploy(notes-app): Test changes in staging: ${CONTAINER_TAG}"
         run: |
           devbox run deploy
 
