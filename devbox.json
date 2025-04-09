@@ -38,7 +38,7 @@
         "echo '✅ Env vars confirmed'",
         "echo \"$GITHUB_TOKEN\" | docker login ghcr.io --username \"$GH_USER\" --password-stdin",
         "echo '✅ Logged into GHCR registry'",
-        "echo 'cd frontend && docker buildx create --use --name ci_build || true",
+        "cd frontend && docker buildx create --use --name ci_build || true",
         "docker buildx build --builder ci_build --tag \"$IMAGE_NAME:$IMAGE_TAG\" --cache-from \"type=registry,ref=${REPO}:cache\" --cache-to \"type=registry,ref=${REPO}:cache,mode=max\" --push .",
         "echo '✅ Frontend image built and pushed'"
       ]
