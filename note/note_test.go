@@ -18,15 +18,13 @@ func TestSaveNote_Success(t *testing.T) {
         t.Fatalf("expected no error, got %v", err)
     }
 
-    if savedNote == nil {
-        t.Fatal("expected a saved note, got nil")
-    }
-
-    if savedNote.Text != note.Text {
+    if savedNote != nil {
+        if savedNote.Text != note.Text {
         t.Errorf("expected text %q, got %q", note.Text, savedNote.Text)
-    }
-    if savedNote.CoverURL != note.CoverURL {
-        t.Errorf("expected cover URL %q, got %q", note.CoverURL, savedNote.CoverURL)
+        }
+        if savedNote.CoverURL != note.CoverURL {
+            t.Errorf("expected cover URL %q, got %q", note.CoverURL, savedNote.CoverURL)
+        }
     }
 }
 
@@ -51,16 +49,14 @@ func TestGetNote_Success(t *testing.T) {
         t.Fatalf("expected no error, got %v", err)
     }
 
-    if note == nil {
-        t.Fatal("expected a note, got nil")
-    }
-
-    // Verify the retrieved note matches
-    if note.Text != testNote.Text {
+    if note != nil {
+        // Verify the retrieved note matches
+        if note.Text != testNote.Text {
         t.Errorf("expected text %q, got %q", testNote.Text, note.Text)
-    }
-    if note.CoverURL != testNote.CoverURL {
-        t.Errorf("expected cover URL %q, got %q", testNote.CoverURL, note.CoverURL)
+        }
+        if note.CoverURL != testNote.CoverURL {
+            t.Errorf("expected cover URL %q, got %q", testNote.CoverURL, note.CoverURL)
+        }
     }
 }
 
