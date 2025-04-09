@@ -4,7 +4,7 @@
 #  │    - Placing a label on PR                                                                             │
 #  │    - Running lint checks on each commit                                                                │
 #  │    - Check for existing Release PR that are open on staging                                            │
-#  │ - When changes are good, merge to staging queue to run testing:                                        │
+#  │ - When changes are good, merge to staging queue to run testing (or trigger testing manually):                                        │
 #  │    - If testing is good -> Merge to staging branch                                                     │
 #  │    - Else               -> reject PR - user will correct errors and resubmit PR to the staging queue   │
 #  └────────────────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -55,19 +55,22 @@ jobs:
         with:
           lfs: true
 
-      - name: Prereq - Grab changed files
-        id: changed-files
-        uses: tj-actions/changed-files@main
-
-      - name: Backend - Lint Testing
-        uses: golangci/golangci-lint-action@v6.5.1
-
-      - name: Precommit - Lint Testing
-        uses: pre-commit/action@release
-        env:
-          SKIP: golangci-lint # using gh action instead
+      - name: DevBox - Install
+        uses: jetify-com/devbox-install-action@main
         with:
-          extra_args: --files ${{ steps.changed-files.outputs.all_changed_files }}
+          enable-cache: 'true'
+
+      - name: Pre-commit - Lint Testing
+        run:
+          devbox run pre-commit
+
+      - name: Comment on PR
+        uses: mshick/add-pr-comment@main
+        with:
+          message: |
+            ## Lint Checks passed ✅
+            > Note: If this is a `WIP` PR - make sure this PR is pointed to the `staging` branch.
+            When you merge the PR, `testing` will trigger - otherwise it can be manually triggered via the UI
 
       - name: Fail-catch - Pre-commit Checks
         if: ${{ failure() && steps.precommit.conclusion == 'failure' }}
@@ -90,6 +93,7 @@ jobs:
         with:
           branch: staging
           state: open
+
       - name: Confirm/Deny Merge
         run: |
           if [ -n "${{ steps.find-prs.outputs.number }}" ]; then
@@ -100,11 +104,17 @@ jobs:
           else
             echo "Changes are ready for merge..."
           fi
+
   test:
     name: Test Changes
     needs: check_existing_pr
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@main
+        with:
+          lfs: true
+
       - name: Fetch Doppler Secrets
         id: doppler
         uses: dopplerhq/secrets-fetch-action@main
@@ -112,37 +122,23 @@ jobs:
           doppler-token: ${{ secrets.DEV_DOPPLER_TOKEN }}
           inject-env-vars: true
 
-      - name: Checkout Code
-        uses: actions/checkout@main
-        with:
-          lfs: true
-
-      - name: Confirm branch name
-        run: |
-          echo "Running tests on branch: ${GITHUB_REF}"
-
   # ┌───────────────────────────────────────────────────────────────────────┐
   # │ Install Dependencies                                                  │
   # └───────────────────────────────────────────────────────────────────────┘
-      - name: Backend - Install Go deps
-        run: go mod download
-
-      - name: Frontend - Install Node.js deps
-        run: npm ci
-        working-directory: ./frontend
-
-      - name: Install go-junit-report
-        run: go install github.com/jstemmer/go-junit-report@latest
+      - name: DevBox - Install
+        uses: jetify-com/devbox-install-action@main
+        with:
+          enable-cache: 'true'
 
   # ┌──────────────────────────────────────────────────────────────────────────┐
   # │ Perform testing                                                          │
   # └──────────────────────────────────────────────────────────────────────────┘
-      - name: Test Backend - Go/Encore
-        run: go test ./... | go-junit-report > test-results/backend-results.xml
+      # Note: Devbox reads env vars - dumped by Doppler
+      - name: Backend - Perform Testing
+        run: devbox run test_be
 
-      - name: Test Frontend - Node/Jest
-        run: npm test
-        working-directory: ./frontend
+      - name: Frontend - Perform Testing
+        run: devbox run test_fe
 
   # ┌───────────────────────────────────────────────────────────────────────┐
   # │ Post Results                                                          │

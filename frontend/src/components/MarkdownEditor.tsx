@@ -41,7 +41,11 @@ const MarkdownEditor: FC<{
       .use(history)
   );
 
-  return <Milkdown />;
+  return (
+    <div data-testid="markdown-editor">
+      <Milkdown />
+    </div>
+  );
 };
 
 export default MarkdownEditor;
