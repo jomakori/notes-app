@@ -120,8 +120,4 @@ jobs:
           ENV_NUM: 1    # production env
           GIT_MESSAGE: 'release(notes-app): Upgraded PROD to: ${CONTAINER_TAG}'
         run: |
-          # Login Git
-          git config --global user.email $GH_USER_EMAIL
-          git config --global user.name $GH_USER
-
           devbox run deploy

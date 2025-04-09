@@ -195,7 +195,8 @@ jobs:
           enable-cache: true
 
   # ┌─────────────────────────────────────────────────────────────────────────────┐
-  # │       Deploy env                                                            │
+  # │   Deploy env                                                                │
+  # │   Note: This uses a different `devbox.json` stored in the gitops repo       │
   # └─────────────────────────────────────────────────────────────────────────────┘
       - name: Deploy Staging
         env:
