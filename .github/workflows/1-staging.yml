@@ -182,6 +182,7 @@ jobs:
         uses: dopplerhq/secrets-fetch-action@main
         with:
           doppler-token: ${{ secrets.STG_DOPPLER_TOKEN }}
+          inject-env-vars: true
 
       - name: Checkout Helm Chart
         uses: actions/checkout@main
