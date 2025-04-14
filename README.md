@@ -35,7 +35,8 @@
 
 ## Overview
 
-This repository hosts the markdown notes application, both the frontend and backend code. It is built with a modern tech stack, ensuring a robust and scalable solution for users.
+This repository hosts the markdown notes application, both the frontend and backend code. It is built using Encore.Go and is a tweaked version of [its original](https://github.com/encoredev/examples/tree/main/meeting-notes)
+
 
 ![Frontend](./images/demo.gif)
 
