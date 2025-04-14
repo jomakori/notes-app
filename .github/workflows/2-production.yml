@@ -3,7 +3,7 @@
 #  │ - Triggers workflow for deploying release to PROD                                  │
 #  │ - Sends a message on PR - to confirm deployment to user                            │
 #  └────────────────────────────────────────────────────────────────────────────────────┘
-name: 2 - Release to Production
+name: 2 - Release Production
 
 # Enforces main branch = prod env
 on:

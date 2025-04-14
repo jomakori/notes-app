@@ -9,7 +9,7 @@
 #  │    - Else               -> reject PR - user will correct errors and resubmit PR to the staging queue   │
 #  └────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-name: 0 - Run Checks & Test Changes
+name: 0 - Validate & Test
 
 # Pipeline permissions
 permissions:

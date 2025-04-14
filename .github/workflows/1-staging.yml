@@ -3,7 +3,7 @@
 #  │ - Triggers workflow for deployment to staging                                      │
 #  │ - Send a message on PR - to confirm deployment to user                             │
 #  └────────────────────────────────────────────────────────────────────────────────────┘
-name: 1 - Deploy to Staging
+name: 1 - Deploy Staging
 
 # Enforces Staging branch = staging env
 on:

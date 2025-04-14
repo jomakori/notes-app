@@ -1,10 +1,41 @@
-# Meeting Notes Example
+<div id="top">
 
-### Tutorial article: https://dev.to/encore/setting-up-a-free-production-ready-web-app-backend-in-go-with-database-in-less-than-100-lines-4ge4
+<!-- HEADER STYLE: COMPACT -->
+<img src="images/markdown_notes.png" width="50%" align="center" style="margin-right: 15px">
 
-This is an example application (frontend + backend) for a Markdown Meeting Notes app.
+# Markdown Notes App
 
-Live demo: [https://encoredev.github.io/meeting-notes/](https://encoredev.github.io/meeting-notes/)
+<!-- BADGES -->
+<img src="https://img.shields.io/github/actions/workflow/status/jomakori/notes-app/1-staging.yml?branch=staging&label=Deploy%20Staging&style=flat" alt="Deploy Staging">
+<img src="https://img.shields.io/github/actions/workflow/status/jomakori/notes-app/2-production.yml?label=Release%20Production&style=flat" alt="Release Production">
+
+<img src="https://img.shields.io/github/last-commit/jomakori/notes-app?style=flat-square&logo=git&logoColor=white&color=0080ff" alt="last-commit">
+<img src="https://img.shields.io/github/languages/top/jomakori/notes-app?style=flat-square&color=0080ff" alt="repo-top-language">
+<img src="https://img.shields.io/github/languages/count/jomakori/notes-app?style=flat-square&color=0080ff" alt="repo-language-count">
+
+<em>Built with these tools and technologies:</em>
+
+<img src="https://img.shields.io/badge/JSON-000000.svg?style=flat-square&logo=JSON&logoColor=white" alt="JSON">
+<img src="https://img.shields.io/badge/semanticrelease-494949.svg?style=flat-square&logo=semantic-release&logoColor=white" alt="semanticrelease">
+<img src="https://img.shields.io/badge/npm-CB3837.svg?style=flat-square&logo=npm&logoColor=white" alt="npm">
+<img src="https://img.shields.io/badge/Autoprefixer-DD3735.svg?style=flat-square&logo=Autoprefixer&logoColor=white" alt="Autoprefixer">
+<img src="https://img.shields.io/badge/PostCSS-DD3A0A.svg?style=flat-square&logo=PostCSS&logoColor=white" alt="PostCSS">
+<img src="https://img.shields.io/badge/Prettier-F7B93E.svg?style=flat-square&logo=Prettier&logoColor=black" alt="Prettier">
+<img src="https://img.shields.io/badge/.ENV-ECD53F.svg?style=flat-square&logo=dotenv&logoColor=black" alt=".ENV">
+<img src="https://img.shields.io/badge/JavaScript-F7DF1E.svg?style=flat-square&logo=JavaScript&logoColor=black" alt="JavaScript">
+<br>
+<img src="https://img.shields.io/badge/Go-00ADD8.svg?style=flat-square&logo=Go&logoColor=white" alt="Go">
+<img src="https://img.shields.io/badge/React-61DAFB.svg?style=flat-square&logo=React&logoColor=black" alt="React">
+<img src="https://img.shields.io/badge/Docker-2496ED.svg?style=flat-square&logo=Docker&logoColor=white" alt="Docker">
+<img src="https://img.shields.io/badge/TypeScript-3178C6.svg?style=flat-square&logo=TypeScript&logoColor=white" alt="TypeScript">
+<img src="https://img.shields.io/badge/GitHub%20Actions-2088FF.svg?style=flat-square&logo=GitHub-Actions&logoColor=white" alt="GitHub%20Actions">
+<img src="https://img.shields.io/badge/Vite-646CFF.svg?style=flat-square&logo=Vite&logoColor=white" alt="Vite">
+<img src="https://img.shields.io/badge/CSS-663399.svg?style=flat-square&logo=CSS&logoColor=white" alt="CSS">
+<img src="https://img.shields.io/badge/Jest-C21325.svg?style=flat-square&logo=Jest&logoColor=white" alt="Jest">
+
+## Overview
+
+This repository hosts the markdown notes application, both the frontend and backend code. It is built with a modern tech stack, ensuring a robust and scalable solution for users.
 
 ![Frontend](./images/demo.gif)
 
@@ -13,59 +44,94 @@ The backend uses an SQL database to store meeting notes and has three API endpoi
 * `POST /note` - Create a new note (or update an existing one).
 * `GET  /images/:query` - Search for images by using the [Pexels API](https://www.pexels.com/api/).
 
+## Features
+
+- **Markdown Support**: The application supports markdown editing, allowing users to format their notes with ease.
+- **Image Handling**: Users can include images in their notes, enhancing the visual aspect of their content.
+- **Sharing Capabilities**: Notes can be shared with others, promoting collaboration. No account creation needed to create, view and share notes
+
+
+## Getting Started
+
+### Prerequisites
+
+This project requires the following dependencies:
+
+- **Programming Language:** TypeScript, Go
+- **Package Manager:** npm, Go, Encore modules
+- **Container Runtime:** Docker
+- **Testing:** Devbox
+
 ## Developing locally
 
-When you have [installed Encore](https://encore.dev/docs/go/install), you can create a new Encore application and clone this example by running this command:
+You can run the api and ui together using `docker-compose`:
 
 ```bash
-encore app create my-app --example=meeting-notes
+make up
 ```
 
-## Running
+Otherwise if you want access to the api dashboard via Encore, you can run:
+```bash
+# Backend first
+make backend_up
 
-To run the application locally, make sure you have [Docker](https://docker.com) installed and running. This is required to run Encore applications with SQL databases.
+# Frontend (in another tab)
+make frontend_up
+```
+
+### API Developer Dashboard - via Encore
+
+While `make backend_up` is running, open [http://localhost:9400/](http://localhost:9400/) to view Encore's local developer dashboard.
+Here you can see the request you just made and a view a trace of the response. The frontend is accessible via [http://localhost:8181/](http://localhost:8181/)
+
+## Testing
+
+Like in CI, we'll utilize devbox to perform tests in an isolated env:
 
 ```bash
-# Run the backend
-encore run
+# Test Frontend
+devbox test_fe
 
-# In a different terminal window, run the frontend
-cd frontend
-npm install
-npm run dev
+# Test Backend
+devbox test_be
+
 ```
 
-### Encore developer dashboard
+## Contributing
+- **🐛 [Report Issues](https://github.com/jomakori/notes-app/issues)**: Submit bugs found or log feature requests for the `notes-app` project.
+- **💡 [Submit Pull Requests](https://github.com/jomakori/notes-app/pulls)**: Review open PRs, and submit your own PRs.
 
-While `encore run` is running, open [http://localhost:9400/](http://localhost:9400/) to view Encore's local developer dashboard.
-Here you can see the request you just made and a view a trace of the response.
+### Contributing Guidelines
+<details>
+<summary>More info</summary>
 
-## Deployment
+1. **Clone the Repository**: Start by cloning the repo
+   ```sh
+   git clone https://github.com/jomakori/notes-app
+   ```
+2. **Create a New Branch**: Always work on a new branch, giving it a descriptive name.
+   ```sh
+   git checkout -b <initials>/<new-feature-x>
+   ```
+3. **Make Your Changes**: Develop and test your changes locally.
+4. **Commit/Push Your Changes**: make continuous commits of your changes to your branch
+   ```sh
+   git commit -m 'feat(category): <insert commit message>'
+   git push origin <initials>/<new-feature-x>
+   ```
+5. **Submit a `WIP` Pull Request and point it to `staging`**: Fill out the template and make sure its pointing to `staging`
+   ```sh
+   git commit -m 'feat(category): <insert commit message>'
+   gh pr create --base staging --head <your-branch-name>
+   ```
+6. **Review/Test**: Once your PR is reviewed and approved, merging it will trigger testing and deploy changes to the `staging` environment
+7. **Release changes to PROD:** Confirm changes on `staging`. If changes look good, merge the `Release` PR to `main` - which will deploy changes to `Production`
+</details>
 
-### Backend
-
-Deploy your backend to a staging environment in Encore's free development cloud.
-
-```bash
-git push encore
-```
-
-You can view your backend deploys, metrics and traces at [https://app.encore.dev](https://app.encore.dev).
-
-### Frontend
-
-#### Using GitHub pages
-
-1. Create a repo on GitHub
-2. In the `vite.config.js` file, set the `base` property to the name of your repo:
-```ts
-base: "/example-meeting-notes/",
-```
-3. Push your code to GitHub and wait for the GitHub actions workflow to finish.
-4. Go to *Settings* → *Pages* for your repo on GitHub and set *Branch* to `gh-pages`.
-
-Your site should now be available at `https://<your-github-username>.github.io/<your-repo-name>/`.
-
-Pushing new code to GitHub will automatically update your site (see the GitHub actions workflow in the `.github` folder).
-
-[Read more about GitHub pages here](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site).
+### Contributors
+<br>
+<p align="left">
+   <a href="https://github.com{/jomakori/notes-app/}graphs/contributors">
+      <img src="https://contrib.rocks/image?repo=jomakori/notes-app">
+   </a>
+</p>
