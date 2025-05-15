@@ -26,9 +26,9 @@ jobs:
         with:
           lfs: true
 
-  # ┌────────────────────────────────────────────────────────────────────────────────────┐
-  # │ Setup Deps                                                                         │
-  # └────────────────────────────────────────────────────────────────────────────────────┘
+      # ┌────────────────────────────────────────────────────────────────────────────────────┐
+      # │ Setup Deps                                                                         │
+      # └────────────────────────────────────────────────────────────────────────────────────┘
       - name: Install Doppler CLI
         uses: dopplerhq/cli-action@master
 
@@ -65,9 +65,9 @@ jobs:
         env:
           DOPPLER_TOKEN: ${{ secrets.PROD_DOPPLER_TOKEN }}
 
-  # ┌─────────────────────────────────────────────────────────────────────────────┐
-  # │       Build/push images                                                     │
-  # └─────────────────────────────────────────────────────────────────────────────┘
+      # ┌─────────────────────────────────────────────────────────────────────────────┐
+      # │       Build/push images                                                     │
+      # └─────────────────────────────────────────────────────────────────────────────┘
       - name: Backend - Build & Push image
         env:
           BUILD_ENV: prod
@@ -92,9 +92,9 @@ jobs:
     environment: production
     runs-on: ubuntu-latest
     steps:
-  # ┌─────────────────────────────────────────────────────────────────────────────┐
-  # │       Setup deps                                                            │
-  # └─────────────────────────────────────────────────────────────────────────────┘
+      # ┌─────────────────────────────────────────────────────────────────────────────┐
+      # │       Setup deps                                                            │
+      # └─────────────────────────────────────────────────────────────────────────────┘
       - name: Fetch Doppler Secrets
         id: doppler
         uses: dopplerhq/secrets-fetch-action@main
@@ -113,13 +113,40 @@ jobs:
         with:
           enable-cache: true
 
-  # ┌─────────────────────────────────────────────────────────────────────────────┐
-  # │       Deploy env                                                            │
-  # └─────────────────────────────────────────────────────────────────────────────┘
+      # ┌─────────────────────────────────────────────────────────────────────────────┐
+      # │       Deploy env                                                            │
+      # └─────────────────────────────────────────────────────────────────────────────┘
       - name: Deploy Release
         env:
           CONTAINER_TAG: ${{ steps.doppler.outputs.SEMANTIC_VERSION }} # value refreshed in step
-          ENV_NUM: 1    # production env
-          GIT_MESSAGE: 'release(notes-app): Upgraded PROD to: ${CONTAINER_TAG}'
+          ENV_NUM: 1 # production env
+          GIT_MESSAGE: "release(notes-app): Upgraded PROD to: ${CONTAINER_TAG}"
         run: |
           devbox run deploy
+
+  sync-staging:
+    name: Sync Staging <-> Main
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@main
+        with:
+          lfs: true
+          fetch-depth: 0 # to get all branches
+          ref: main
+
+      - name: Check - Active Release PRs
+        uses: juliangruber/find-pull-request-action@v1
+        id: find-prs
+        with:
+          branch: staging
+          state: open
+
+      - name: Sync - Staging <-> Main
+        if: steps.find-prs.outputs.number == '' # if null - no active PRs
+        uses: connor-baer/action-sync-branch@main
+        with:
+          branch: staging
+          token: ${{ secrets.GITHUB_TOKEN }}
+          force: true

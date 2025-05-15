@@ -87,7 +87,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'merge_group' && github.event.action == 'enqueued')
     runs-on: ubuntu-latest
     steps:
-      - name: Check for Open Release PRs
+      - name: Check - Active Release PRs
         uses: juliangruber/find-pull-request-action@v1
         id: find-prs
         with:
