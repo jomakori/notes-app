@@ -227,7 +227,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           msg: |
-            ## `Staging` env deployed ✅
+            ## Deployed `Staging` ✅
             - ### [Notes App API (backend)](https://staging-notes-app.intrc.net/)
             - ### [Notes App UI (frontend)](https://staging-flower.intrc.net/)
 
