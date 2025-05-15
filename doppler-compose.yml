@@ -1,8 +1,10 @@
 ---
 # pass env secrets - doppler
 x-doppler: &doppler-env
-  environment:{{range $key, $value := .}}
-    - {{$key}}{{end}}
+  environment:
+  {{- range $key, $value := . }}
+      {{$key}}: "{{$value}}"
+  {{- end }}
 
 # Run app + dependent services
 services:
@@ -12,10 +14,17 @@ services:
     ports:
       - 8080:8080
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   frontend:
     <<: *doppler-env            # injects doppler secrets
+    image: note-app:frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -25,12 +34,17 @@ services:
       - backend
 
   db:
-    <<: *doppler-env            # injects doppler secrets
+    <<: *doppler-env # injects doppler secrets
     image: postgres:alpine
     ports:
       - 5432:5432
     volumes:
       - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
 
 volumes:
   db_data:

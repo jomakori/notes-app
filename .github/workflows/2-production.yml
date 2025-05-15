@@ -70,6 +70,7 @@ jobs:
   # └─────────────────────────────────────────────────────────────────────────────┘
       - name: Backend - Build & Push image
         env:
+          BUILD_ENV: prod
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-backend
           IMAGE_TAG: ${{ steps.semantic.outputs.new_release_version }}
