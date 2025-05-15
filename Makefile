@@ -20,12 +20,18 @@ frontend_up:
 up: conditional_down		# Confirm no containers are running
 	doppler secrets --config dev_docker && \
 	doppler run --config dev_docker \
-		--command='encore build docker note-app:backend --config=encore.docker.json' && \
+		--command='encore build docker note-app:backend --config=encore.local.json' && \
 	doppler run --config dev_docker \
 		--mount-template doppler-compose.yml \
 		--mount docker-compose.yml \
 		--command 'docker-compose up --build'
 
+compose_up:
+	doppler secrets --config dev_docker && \
+	doppler run --config dev_docker \
+		--mount-template doppler-compose.yml \
+		--mount docker-compose.yml \
+		--command 'docker-compose up'
 
 down:
 	doppler run --config dev_docker \

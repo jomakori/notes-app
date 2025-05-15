@@ -1,7 +1,7 @@
 {
     "sql_servers": [
         {
-            "host": "prod-notes-app-api.prod-notes-app.svc.cluster.local",
+            "host": "cnpg-webhook-service.cnpg-db-stg.svc.cluster.local",
             "port": 443,
             "tls_config": {
                 "disabled": true
