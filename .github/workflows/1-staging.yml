@@ -236,6 +236,7 @@ jobs:
             - #### Confirming `rev` label in EKS pods/deployments = PR number
 
             ## 📄 Checklist before merging to PROD
+            - [ ] Verify deployment
             - [ ] Confirm Changes
             - [ ] Merge PR - to release changes to production.
 
