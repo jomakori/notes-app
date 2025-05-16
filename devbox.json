@@ -29,7 +29,7 @@
         "echo '✅ Env vars confirmed'",
         "echo \"$GITHUB_TOKEN\" | docker login ghcr.io --username \"$GH_USER\" --password-stdin",
         "echo '✅ Logged into GHCR registry'",
-        "encore build docker \"$IMAGE_NAME:$IMAGE_TAG\" --config encore.prod.json",
+        "encore build docker \"$IMAGE_NAME:$IMAGE_TAG\" --config encore.${BUILD_ENV}.json",
         "docker push \"$IMAGE_NAME:$IMAGE_TAG\"",
         "echo '✅ Backend image built and pushed'"
       ],

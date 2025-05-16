@@ -2,9 +2,9 @@
   "sql_servers": [
     {
       "host": "db",
-      "port": "5432",
+      "port": 5432,
       "tls_config": {
-        "disabled": true
+        "enabled": true
       },
       "databases": {
         "notes": {

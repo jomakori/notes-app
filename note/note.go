@@ -17,6 +17,21 @@ var notedb = sqldb.NewDatabase("notes", sqldb.DatabaseConfig{
 	Migrations: "./migrations",
 })
 
+func init() {
+	// Ensure the `note` table exists
+	ctx := context.Background()
+	_, err := notedb.Exec(ctx, `
+		CREATE TABLE IF NOT EXISTS note (
+			id TEXT PRIMARY KEY,
+			text TEXT,
+			cover_url TEXT
+		)
+	`)
+	if err != nil {
+		panic("failed to ensure `note` table exists: " + err.Error())
+	}
+}
+
 //encore:api public method=POST path=/note
 func SaveNote(ctx context.Context, note *Note) (*Note, error) {
 
@@ -53,4 +68,29 @@ func GetNote(ctx context.Context, id string) (*Note, error) {
 
 	// Otherwise, we return the note.
 	return note, nil
+}
+
+// HealthCheckResponse represents the response structure for the health check API.
+type HealthCheckResponse struct {
+	Status string `json:"status"`
+	Error  string `json:"error,omitempty"`
+}
+
+//encore:api public method=GET path=/health
+func HealthCheck(ctx context.Context) (*HealthCheckResponse, error) {
+	// Check database connectivity by executing a simple query
+	var result int
+	err := notedb.QueryRow(ctx, "SELECT 1").Scan(&result)
+	if err != nil {
+		return &HealthCheckResponse{Status: "unhealthy", Error: "Database connection failed"}, err
+	}
+
+	// Check if the 'note' table exists
+	var tableExists string
+	err = notedb.QueryRow(ctx, "SELECT to_regclass('public.note')").Scan(&tableExists)
+	if err != nil || tableExists == "" {
+		return &HealthCheckResponse{Status: "unhealthy", Error: "Table 'note' does not exist"}, err
+	}
+
+	return &HealthCheckResponse{Status: "healthy"}, nil
 }
