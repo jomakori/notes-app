@@ -113,15 +113,13 @@ jobs:
         with:
           enable-cache: true
 
-      # ┌─────────────────────────────────────────────────────────────────────────────┐
-      # │       Deploy env                                                            │
-      # └─────────────────────────────────────────────────────────────────────────────┘
       - name: Deploy Release
         env:
           CONTAINER_TAG: ${{ steps.doppler.outputs.SEMANTIC_VERSION }} # value refreshed in step
           ENV_NUM: 1 # production env
-          GIT_MESSAGE: "release(notes-app): Upgraded PROD to: ${CONTAINER_TAG}"
         run: |
+          GIT_MESSAGE="release(notes-app): Upgraded PROD to: ${CONTAINER_TAG}"
+          export GIT_MESSAGE
           devbox run deploy
 
   sync-staging:
