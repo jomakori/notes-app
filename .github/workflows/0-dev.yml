@@ -55,14 +55,11 @@ jobs:
         with:
           lfs: true
 
-      - name: DevBox - Install
-        uses: jetify-com/devbox-install-action@main
-        with:
-          enable-cache: 'true'
-
       - name: Pre-commit - Lint Testing
-        run:
-          devbox run pre-commit
+        uses: pre-commit/action@main
+        id: precommit
+        with:
+          extra_args: run --all-files
 
       - name: Comment on PR
         uses: mshick/add-pr-comment@main

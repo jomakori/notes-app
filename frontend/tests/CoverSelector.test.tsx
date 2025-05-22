@@ -1,7 +1,6 @@
-
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import CoverSelector from "./CoverSelector";
+import CoverSelector from "../src/components/CoverSelector";
 import debounce from "lodash.debounce";
 
 // Mock lodash.debounce
@@ -12,11 +11,6 @@ test("renders CoverSelector component", () => {
     open: true,
     setOpen: jest.fn(),
     setCoverImage: jest.fn(),
-    client: {
-      images: {
-        search: jest.fn().mockResolvedValue({ images: [] }),
-      },
-    },
   };
 
   render(<CoverSelector {...mockProps} />);

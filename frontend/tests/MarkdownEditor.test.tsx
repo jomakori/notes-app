@@ -1,8 +1,6 @@
-
-
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import MarkdownEditor from "./MarkdownEditor";
+import MarkdownEditor from "../src/components/MarkdownEditor";
 
 describe("MarkdownEditor", () => {
   it("renders with content", async () => {

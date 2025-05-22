@@ -70,7 +70,6 @@ jobs:
             echo "EOF"
           } >> $GITHUB_OUTPUT
 
-
       - name: Create Release PR
         if: steps.check-pr.outputs.exists == '0'
         uses: devops-infra/action-pull-request@master
@@ -100,9 +99,9 @@ jobs:
         with:
           lfs: true
 
-  # ┌────────────────────────────────────────────────────────────────────────────────────┐
-  # │ Setup Deps                                                                         │
-  # └────────────────────────────────────────────────────────────────────────────────────┘
+      # ┌────────────────────────────────────────────────────────────────────────────────────┐
+      # │ Setup Deps                                                                         │
+      # └────────────────────────────────────────────────────────────────────────────────────┘
       - name: Install Doppler CLI
         uses: dopplerhq/cli-action@master
 
@@ -148,9 +147,9 @@ jobs:
           script: |
             core.setFailed("Semantic version is null. See logs.")
 
-  # ┌─────────────────────────────────────────────────────────────────────────────┐
-  # │       Build/push images                                                     │
-  # └─────────────────────────────────────────────────────────────────────────────┘
+      # ┌─────────────────────────────────────────────────────────────────────────────┐
+      # │       Build/push images                                                     │
+      # └─────────────────────────────────────────────────────────────────────────────┘
       - name: Backend - Build & Push image
         env:
           BUILD_ENV: stg
@@ -158,7 +157,8 @@ jobs:
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-backend
           IMAGE_TAG: ${{ steps.version.outputs.semantic_version }} # Since it was changed post-fetch
         run: |
-          devbox run build_backend
+          devbox run build_push
+          echo '✅ Backend image built and pushed'
 
       - name: Frontend - Build & Push image
         env:
@@ -167,7 +167,8 @@ jobs:
           IMAGE_TAG: ${{ steps.version.outputs.semantic_version }} # Since it was changed post-fetch
           REPO: ghcr.io/${{ github.repository }}
         run: |
-          devbox run build_frontend
+          devbox run build_push
+          echo '✅ Frontend image built and pushed'
 
   deploy:
     name: Deploy Staging
@@ -175,9 +176,9 @@ jobs:
     environment: staging
     runs-on: ubuntu-latest
     steps:
-  # ┌─────────────────────────────────────────────────────────────────────────────┐
-  # │       Setup deps                                                            │
-  # └─────────────────────────────────────────────────────────────────────────────┘
+      # ┌─────────────────────────────────────────────────────────────────────────────┐
+      # │       Setup deps                                                            │
+      # └─────────────────────────────────────────────────────────────────────────────┘
       - name: Fetch Doppler Secrets
         id: doppler
         uses: dopplerhq/secrets-fetch-action@main
@@ -195,7 +196,7 @@ jobs:
         uses: jetpack-io/devbox-install-action@main
         with:
           enable-cache: true
-      
+
       - name: Deploy Staging
         env:
           CONTAINER_TAG: ${{ steps.doppler.outputs.SEMANTIC_VERSION }} #retrieved from build step

@@ -124,9 +124,6 @@
     "github:NixOS/nixpkgs/nixpkgs-unstable": {
       "resolved": "github:NixOS/nixpkgs/b7ba7f9f45c5cd0d8625e9e217c28f8eb6a19a76?lastModified=1743568003&narHash=sha256-ZID5T65E8ruHqWRcdvZLsczWDOAWIE7om%2BvQOREwiX0%3D"
     },
-    "github:encoredev/encore-flake": {
-      "resolved": "github:encoredev/encore-flake/169c2c7d6c9bdacdeb3e0519e5d761ab88336686?lastModified=1743521249&narHash=sha256-t1cvtJ4NvEO34%2FmJM8wFq93CGLaqyp87ZShNZMmneUg%3D"
-    },
     "go-junit-report@latest": {
       "last_modified": "2025-03-11T17:52:14Z",
       "resolved": "github:NixOS/nixpkgs/0d534853a55b5d02a4ababa1d71921ce8f0aee4c#go-junit-report",
