@@ -3,6 +3,8 @@
  * Provides functions for notes and image search.
  */
 
+import { getApiBase } from "./getApiBase";
+
 export interface Note {
   id: string;
   text: string;
@@ -20,18 +22,19 @@ export interface SearchResponse {
   }[];
 }
 
-const API_BASE = import.meta.env.VITE_API_ENDPOINT as string;
-
 /** Fetch a note by ID */
 export async function getNote(id: string): Promise<Note> {
-  const resp = await fetch(`${API_BASE}/note/${encodeURIComponent(id)}`);
+  console.log("[API] getNote", { id });
+  const resp = await fetch(`${getApiBase()}/note/${encodeURIComponent(id)}`);
   if (!resp.ok) throw new Error(await resp.text());
   return await resp.json();
 }
 
 /** Save a note (create or update) */
 export async function saveNote(note: Note): Promise<Note> {
-  const resp = await fetch(`${API_BASE}/note`, {
+  // For privacy, do not log the note text
+  console.log("[API] saveNote", { id: note.id, cover_url: note.cover_url });
+  const resp = await fetch(`${getApiBase()}/note`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(note),
@@ -42,7 +45,8 @@ export async function saveNote(note: Note): Promise<Note> {
 
 /** Search for images using the backend's /images/:query endpoint */
 export async function searchPhoto(query: string): Promise<SearchResponse> {
-  const resp = await fetch(`${API_BASE}/images/${encodeURIComponent(query)}`);
+  console.log("[API] searchPhoto", { query });
+  const resp = await fetch(`${getApiBase()}/images/${encodeURIComponent(query)}`);
   if (!resp.ok) throw new Error(await resp.text());
   return await resp.json();
 }

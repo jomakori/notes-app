@@ -7,11 +7,16 @@ RUN apk add --no-cache curl
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy source code + dependencies
-COPY go.mod go.sum *.go ./
+# Copy source code + dependencies\
+COPY . .
+RUN ls -a
 
 # Download Go modules
 RUN go mod download
+
+# Setup Go test tools
+RUN go install github.com/jstemmer/go-junit-report/v2@latest
+RUN mkdir -p test-results
 
 # Build the Go application
 RUN go build -o main .

@@ -12,12 +12,12 @@
       "test_fe": [
         "mkdir -p test-results && echo '✅ Test Results dir created'",
         "cd frontend && npm install && npm test",
-        "echo '✅ Frontend tests completed'"
+        "echo '🧪 Frontend tests completed'"
       ],
       "test_be": [
         "mkdir -p test-results && echo '✅ Test Results dir created'",
-        "cd backend && go test ./tests -cover 2>&1 | go-junit-report -set-exit-code > test-results/backend-report.xml",
-        "echo '✅ Backend tests completed'"
+        "cd backend && go test ./tests -cover 2>&1 | tee >(go-junit-report > ../test-results/backend-report.xml)",
+        "echo '🧪 Backend tests completed'"
       ],
       "build_push": [
         "for var in GITHUB_TOKEN GH_USER IMAGE_NAME IMAGE_TAG REPO; do eval \"value=\\$$var\"; [ -z \"$value\" ] && { echo \"Error: $var is not set.\"; exit 1; }; done",

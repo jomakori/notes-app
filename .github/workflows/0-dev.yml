@@ -132,7 +132,7 @@ jobs:
   # └──────────────────────────────────────────────────────────────────────────┘
       # Note: Devbox reads env vars - dumped by Doppler
       - name: Backend - Perform Testing
-        run: devbox run test_be
+        run: make test_be
 
       - name: Frontend - Perform Testing
         run: devbox run test_fe

@@ -52,12 +52,14 @@ func init() {
 }
 
 func SaveNote(ctx context.Context, note *Note) (*Note, error) {
+	log.Printf("SaveNote: saving note: ID=%s, Text=%s, CoverURL=%s", note.ID, note.Text, note.CoverURL)
 	// Save or update the note in the database.
 	_, err := db.ExecContext(ctx, `
 		INSERT INTO note (id, text, cover_url) VALUES ($1, $2, $3)
 		ON CONFLICT (id) DO UPDATE SET text=$2, cover_url=$3
 	`, note.ID, note.Text, note.CoverURL)
 	if err != nil {
+		log.Printf("SaveNote: error saving note: %v", err)
 		return nil, err
 	}
 	return note, nil
@@ -70,9 +72,16 @@ func GetNote(ctx context.Context, id string) (*Note, error) {
 		WHERE id = $1
 	`, id).Scan(&note.Text, &note.CoverURL)
 	if err != nil {
+		log.Printf("GetNote: error retrieving note ID=%s: %v", id, err)
 		return nil, err
 	}
+	log.Printf("GetNote: retrieved note: ID=%s, Text=%s, CoverURL=%s", note.ID, note.Text, note.CoverURL)
 	return note, nil
+}
+
+func DeleteNote(ctx context.Context, id string) error {
+	_, err := db.ExecContext(ctx, `DELETE FROM note WHERE id = $1`, id)
+	return err
 }
 
 type HealthCheckResponse struct {
@@ -137,13 +146,6 @@ func main() {
 
 	// Handle /note/{id} endpoint (GET only)
 	mux.HandleFunc("/note/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		
 		// Extract ID from path
 		path := r.URL.Path
 		if len(path) <= len("/note/") {
@@ -151,14 +153,25 @@ func main() {
 			return
 		}
 		id := path[len("/note/"):]
-		
-		note, err := GetNote(r.Context(), id)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
+
+		switch r.Method {
+		case http.MethodGet:
+			w.Header().Set("Content-Type", "application/json")
+			note, err := GetNote(r.Context(), id)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusNotFound)
+				return
+			}
+			json.NewEncoder(w).Encode(note)
+		case http.MethodDelete:
+			if err := DeleteNote(r.Context(), id); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
-		
-		json.NewEncoder(w).Encode(note)
 	})
 
 	mux.HandleFunc("/images/", func(w http.ResponseWriter, r *http.Request) {

@@ -88,7 +88,9 @@ useEffect(() => {
 
   const saveDocument = useCallback(async () => {
     try {
+      const isInitialSave = !queryParamID;
       const noteId = queryParamID || uuidv4();
+      console.log("[API] Saving note", { id: noteId, cover_url: coverImage });
       // Send POST request to the backend for saving the note
       const response = await saveNote({
         text: content,
@@ -102,8 +104,10 @@ useEffect(() => {
       window.history.pushState(null, "", url.toString());
       setQueryParamID(response.id); // Update the component state with the new ID
 
-      // We now have saved note with an ID, we can now show the sharing modal
-      setShowSharingModal(true);
+      // Only show the sharing modal on the initial save
+      if (isInitialSave) {
+        setShowSharingModal(true);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -152,12 +156,9 @@ useEffect(() => {
       </main>
 
       <div className="fixed bottom-5 right-5 flex items-center space-x-4">
-        <button
-          className="flex items-center space-x-2 rounded bg-black px-2 py-1 text-lg text-white duration-200 hover:opacity-80"
-          onClick={() => saveDocument()}
-        >
-          <FloppyDisk size={20} /> <span>Save</span>
-        </button>
+        <div className="flex items-center space-x-2 rounded bg-gray-200 px-2 py-1 text-lg text-gray-700 cursor-default select-none">
+          <FloppyDisk size={20} /> <span>Autosaved</span>
+        </div>
       </div>
 
       <SharingModal open={showSharingModal} setOpen={setShowSharingModal} />
