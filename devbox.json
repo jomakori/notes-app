@@ -5,8 +5,7 @@
     "go-junit-report@latest",
     "pre-commit@latest",
     "golangci-lint@latest",
-    "docker-buildx@latest",
-    "doppler@latest"
+    "docker-buildx@latest"
   ],
   "shell": {
     "scripts": {

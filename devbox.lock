@@ -49,54 +49,6 @@
         }
       }
     },
-    "doppler@latest": {
-      "last_modified": "2025-05-16T20:19:48Z",
-      "resolved": "github:NixOS/nixpkgs/12a55407652e04dcf2309436eb06fef0d3713ef3#doppler",
-      "source": "devbox-search",
-      "version": "3.74.0",
-      "systems": {
-        "aarch64-darwin": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/y668f58njmrwndq2vzvd2013klgyr8mc-doppler-3.74.0",
-              "default": true
-            }
-          ],
-          "store_path": "/nix/store/y668f58njmrwndq2vzvd2013klgyr8mc-doppler-3.74.0"
-        },
-        "aarch64-linux": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/n751mbf77ldbv4daw6nxykzrs2bq84a2-doppler-3.74.0",
-              "default": true
-            }
-          ],
-          "store_path": "/nix/store/n751mbf77ldbv4daw6nxykzrs2bq84a2-doppler-3.74.0"
-        },
-        "x86_64-darwin": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/abmclxna8750chlc5i8yj6hvlmb86q0k-doppler-3.74.0",
-              "default": true
-            }
-          ],
-          "store_path": "/nix/store/abmclxna8750chlc5i8yj6hvlmb86q0k-doppler-3.74.0"
-        },
-        "x86_64-linux": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/9xmw5l1y9p6s1bw21jj54f77yldrb35p-doppler-3.74.0",
-              "default": true
-            }
-          ],
-          "store_path": "/nix/store/9xmw5l1y9p6s1bw21jj54f77yldrb35p-doppler-3.74.0"
-        }
-      }
-    },
     "github:NixOS/nixpkgs/nixpkgs-unstable": {
       "last_modified": "2025-05-22T23:55:03Z",
       "resolved": "github:NixOS/nixpkgs/fe51d34885f7b5e3e7b59572796e1bcb427eccb1?lastModified=1747958103&narHash=sha256-qmmFCrfBwSHoWw7cVK4Aj%2Bfns%2Bc54EBP8cGqp%2FyK410%3D"
