@@ -114,11 +114,15 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(response)
+			if err := json.NewEncoder(w).Encode(response); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	})
 
 	// Handle /note endpoint (POST only)
@@ -141,7 +145,9 @@ func main() {
 			return
 		}
 
-		json.NewEncoder(w).Encode(savedNote)
+		if err := json.NewEncoder(w).Encode(savedNote); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	})
 
 	// Handle /note/{id} endpoint (GET only)
@@ -162,7 +168,9 @@ func main() {
 				http.Error(w, err.Error(), http.StatusNotFound)
 				return
 			}
-			json.NewEncoder(w).Encode(note)
+			if err := json.NewEncoder(w).Encode(note); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 		case http.MethodDelete:
 			if err := DeleteNote(r.Context(), id); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -194,7 +202,9 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(photos)
+		if err := json.NewEncoder(w).Encode(photos); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	})
 
 	// Create handler chain with CORS middleware

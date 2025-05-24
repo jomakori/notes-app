@@ -6,6 +6,7 @@ import (
     "fmt"
     "net/http"
     "encoding/json"
+    "log"
 )
 
 // Workaround: Duplicate stubs due to Go package limitations and file structure constraints.
@@ -29,7 +30,11 @@ func SearchPhoto(ctx context.Context, query string) (*SearchResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("SearchPhoto: request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			log.Printf("SearchPhoto: failed to close response body: %v", cerr)
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("SearchPhoto: unexpected status: %s", resp.Status)
 	}

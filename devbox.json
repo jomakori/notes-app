@@ -9,6 +9,10 @@
   ],
   "shell": {
     "scripts": {
+      "pre-commit": [
+        "pre-commit run --all-files",
+        "echo '✅ Pre-commit checks completed'"
+      ],
       "test_fe": [
         "mkdir -p test-results && echo '✅ Test Results dir created'",
         "cd frontend && npm install && npm test",

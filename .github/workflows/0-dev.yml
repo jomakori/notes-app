@@ -113,7 +113,7 @@ jobs:
           lfs: true
 
       - name: Install Doppler CLI
-        uses: dopplerhq/cli-action@main
+        uses: dopplerhq/cli-action@v3
         with:
           doppler-token: ${{ secrets.DEV_DOPPLER_TOKEN }}
 

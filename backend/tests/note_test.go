@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"bytes"
 	"encoding/json"
+	"log"
 )
 
 
@@ -33,7 +34,11 @@ func SaveNote(ctx context.Context, note *Note) (*Note, error) {
 	if err != nil {
 		return nil, fmt.Errorf("SaveNote: request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			log.Printf("SaveNote: failed to close response body: %v", cerr)
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("SaveNote: unexpected status: %s", resp.Status)
 	}
@@ -54,7 +59,11 @@ func GetNote(ctx context.Context, id string) (*Note, error) {
 	if err != nil {
 		return nil, fmt.Errorf("GetNote: request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			log.Printf("GetNote: failed to close response body: %v", cerr)
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("GetNote: unexpected status: %s", resp.Status)
 	}
@@ -75,7 +84,11 @@ func deleteNoteByID(ctx context.Context, id string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			log.Printf("deleteNoteByID: failed to close response body: %v", cerr)
+		}
+	}()
 	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusNotFound {
 		return fmt.Errorf("unexpected status: %s", resp.Status)
 	}

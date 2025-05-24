@@ -9,11 +9,12 @@ repos:
       - id: check-added-large-files
       - id: check-merge-conflict
 
-  # - repo: https://github.com/TekWizely/pre-commit-golang
-  #   rev: v1.0.0-rc.1
-  #   hooks:
-  #     - id: go-staticcheck-pkg
-  #       files: ^backend/.*\.go$
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v2.1.6
+    hooks:
+      - id: golangci-lint
+        entry: bash -c 'cd backend && golangci-lint run --verbose --timeout=5m ./...'
+        files: ^backend/.*\.go$
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
@@ -29,3 +30,11 @@ repos:
       - id: commitizen-branch
         stages: [pre-push]
         args: ['--rev-range', 'HEAD~1..HEAD']
+
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.7
+    hooks:
+      - id: actionlint
+        args:
+          - -ignore
+          - SC2086
