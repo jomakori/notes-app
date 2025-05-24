@@ -1,5 +1,5 @@
 # Use the official Golang image as a base image
-FROM golang:1.20-alpine
+FROM golang:1.23-alpine
 
 # Install curl for healthchecks
 RUN apk add --no-cache curl
@@ -9,7 +9,6 @@ WORKDIR /app
 
 # Copy source code + dependencies\
 COPY . .
-RUN ls -a
 
 # Download Go modules
 RUN go mod download

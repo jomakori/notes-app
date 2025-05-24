@@ -55,11 +55,14 @@ jobs:
         with:
           lfs: true
 
-      - name: Pre-commit - Lint Testing
-        uses: pre-commit/action@main
-        id: precommit
+      - name: DevBox - Install
+        uses: jetify-com/devbox-install-action@main
         with:
-          extra_args: --all-files --color=always
+          enable-cache: 'true'
+
+      - name: Pre-commit - Lint Testing (via Devbox)
+        run: devbox run pre-commit
+        id: precommit
 
       - name: Comment on PR
         uses: mshick/add-pr-comment@main
@@ -70,7 +73,7 @@ jobs:
             When you merge the PR, `testing` will trigger - otherwise it can be manually triggered via the UI
 
       - name: Fail-catch - Pre-commit Checks
-        if: ${{ failure() && steps.precommit.conclusion == 'failure' }}
+        if: ${{ failure() && steps.precommit.outcome == 'failure' }}
         uses: actions/github-script@main
         with:
           script: |

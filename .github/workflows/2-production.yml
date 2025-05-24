@@ -32,6 +32,14 @@ jobs:
       - name: Install Doppler CLI
         uses: dopplerhq/cli-action@master
 
+      - name: Cache Devbox store
+        uses: actions/cache@main
+        with:
+          path: ~/.cache/devbox
+          key: devbox-${{ hashFiles('devbox.lock') }}
+          restore-keys: |
+            devbox-
+
       - name: Install Devbox
         uses: jetpack-io/devbox-install-action@main
         with:
@@ -109,6 +117,14 @@ jobs:
         with:
           repository: jomakori/gke_GitOps
           token: ${{ steps.doppler.outputs.GITOPS_GH_TOKEN }}
+
+      - name: Cache Devbox store
+        uses: actions/cache@main
+        with:
+          path: ~/.cache/devbox
+          key: devbox-${{ hashFiles('devbox.lock') }}
+          restore-keys: |
+            devbox-
 
       - name: Install Devbox
         uses: jetpack-io/devbox-install-action@main
