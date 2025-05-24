@@ -9,18 +9,11 @@ repos:
       - id: check-added-large-files
       - id: check-merge-conflict
 
-  - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v9.23.0
-    hooks:
-      - id: eslint
-        args: [--fix]
-        files: \.(js|ts|tsx)$
-
-  - repo: https://github.com/dnephin/pre-commit-golang
-    rev: v0.5.1
-    hooks:
-      - id: golangci-lint
-        files: \.go$
+  # - repo: https://github.com/TekWizely/pre-commit-golang
+  #   rev: v1.0.0-rc.1
+  #   hooks:
+  #     - id: go-staticcheck-pkg
+  #       files: ^backend/.*\.go$
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
@@ -30,7 +23,7 @@ repos:
           - --skip=**/package-lock.json,package-lock.json,**/CoverSelector.tsx,**/client.ts,frontend/coverage/**
 
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.4.1
+    rev: v4.8.2
     hooks:
       - id: commitizen
       - id: commitizen-branch

@@ -59,7 +59,7 @@ jobs:
         uses: pre-commit/action@main
         id: precommit
         with:
-          extra_args: run --all-files
+          extra_args: --all-files --color=always
 
       - name: Comment on PR
         uses: mshick/add-pr-comment@main
