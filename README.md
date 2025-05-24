@@ -114,11 +114,11 @@ devbox test_be
    git commit -m 'feat(category): <insert commit message>'
    gh pr create --base staging --head <your-branch-name>
    ```
-6. **Test/Deploy to Staging**: 
+6. **Test/Deploy to Staging**:
    - Once the PR has been reviewed and approved - merge into `staging` to trigger testing
    - When tests pass - changes are deployed to `staging`
    - The `Release` PR is auto-generated - w/ the same content as the `WIP` PR
-7. **Release changes to PROD:** 
+7. **Release changes to PROD:**
    - Confirm changes on `staging`
    - If changes look good - merge the `Release` PR to `main` - which will deploy changes to `Production`
 </details>
