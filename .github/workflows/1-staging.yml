@@ -16,8 +16,8 @@ on:
 permissions: write-all
 
 jobs:
-  create-release-pr:
-    name: Create Release PR (conditional)
+  check-release-pr:
+    name: Check - Release PR
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -90,7 +90,9 @@ jobs:
 
   build:
     name: Build Staging
-    needs: create-release-pr
+    needs: check-release-pr
+
+
     environment: staging
     runs-on: ubuntu-latest
     steps:
@@ -164,6 +166,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/note-app-backend
           IMAGE_TAG: ${{ steps.version.outputs.semantic_version }} # Since it was changed post-fetch
+          REPO: ghcr.io/${{ github.repository }}
         run: |
           devbox run build_push
           echo '✅ Backend image built and pushed'
