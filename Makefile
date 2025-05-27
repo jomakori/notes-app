@@ -13,7 +13,7 @@ down:
 		--command 'docker-compose down'
 
 test_be: conditional_down														# Confirm no containers are running
-	mkdir -p ./test-results && chown $$(id -u):$$(id -g) ./test-results			# Address permissions for test-results
+	chown $$(id -u):$$(id -g) ./test-results									# Address permissions for test-results
 	doppler secrets --config dev_testing && \
 	doppler run --config dev_testing \
 		--mount-template doppler-compose.yml \

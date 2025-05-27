@@ -140,7 +140,7 @@ jobs:
   # └──────────────────────────────────────────────────────────────────────────┘
       # Note: Devbox reads env vars - dumped by Doppler
       - name: Backend - Perform Testing
-        run: make test_be
+        run: devbox run test_be
         env:
           DOPPLER_TOKEN: ${{ secrets.DEV_DOPPLER_TOKEN }}
 

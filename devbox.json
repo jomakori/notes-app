@@ -20,7 +20,7 @@
       ],
       "test_be": [
         "mkdir -p test-results && echo '✅ Test Results dir created'",
-        "cd backend && go test ./tests -cover 2>&1 | tee >(go-junit-report > ../test-results/backend-report.xml)",
+        "make test_be",
         "echo '🧪 Backend tests completed'"
       ],
       "build_push": [
